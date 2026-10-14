@@ -1,0 +1,15 @@
+{
+  "name": "Prachi AI Agent-Ready Website Factory Build Kit",
+  "version": "1.0.0",
+  "purpose": "Provide a coding agent with product requirements, memory, rules, phased execution, architecture, security, testing, deployment, and handoff documentation for building Prachi AI.",
+  "entrypoint": "MASTER_AGENT_PROMPT.md",
+  "source_of_truth": [
+    "01_PRD/PRD.md",
+    "02_AGENT_INSTRUCTIONS/RULES.md",
+    "00_PROJECT_CONTROL/PROJECT_MEMORY.md",
+    "00_PROJECT_CONTROL/DECISION_LOG.md",
+    "03_PHASES/current-phase-file"
+  ],
+  "phase_count": 15,
+  "supports": ["chatbot", "personal-assistant", "memory", "RAG", "vision", "documents", "image-workflows", "ML-forecasting", "tools", "voice", "research", "admin", "security", "deployment"]
+}

@@ -1,0 +1,11 @@
+READ THESE FILES FIRST:
+1. MASTER_AGENT_PROMPT.md
+2. AGENTS.md
+3. 01_PRD/PRD.md
+4. 02_AGENT_INSTRUCTIONS/RULES.md
+5. 00_PROJECT_CONTROL/PROJECT_STATUS.md
+6. 03_PHASES/P00_FOUNDATION.md
+
+Then inspect the existing repository and build Prachi AI phase-by-phase.
+Do not skip gates. Do not invent missing requirements when a documented assumption can be used.
+At the end of each phase, update status, memory, changelog, task log, traceability, and tests.

@@ -1,0 +1,17 @@
+name: CI
+on:
+  push:
+  pull_request:
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Repository sanity check
+        run: |
+          test -f README.md
+          test -f AGENTS.md
+          test -f MASTER_AGENT_PROMPT.md
+          test -f 01_PRD/PRD.md
+          test -f 00_PROJECT_CONTROL/PROJECT_STATUS.md
+          echo "Prachi AI build-kit structure OK"

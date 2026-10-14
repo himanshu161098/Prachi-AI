@@ -1,0 +1,341 @@
+{
+  "conversations": {
+    "conv-1791358722238": {
+      "created_at": "2026-10-07T07:38:42.239Z",
+      "updated_at": "2026-10-07T07:38:42.274Z",
+      "id": "conv-1791358722238",
+      "user_id": "usr-1791358275895-sqk5",
+      "title": "Write a python script to download a webp...",
+      "mode": "general"
+    },
+    "conv-1791359186070": {
+      "created_at": "2026-10-07T07:46:26.070Z",
+      "updated_at": "2026-10-07T07:46:27.132Z",
+      "id": "conv-1791359186070",
+      "user_id": "usr-1791358275895-sqk5",
+      "title": "Write a complete python script to scrape...",
+      "mode": "general"
+    },
+    "conv-1791359190743": {
+      "created_at": "2026-10-07T07:46:30.743Z",
+      "updated_at": "2026-10-07T07:46:30.777Z",
+      "id": "conv-1791359190743",
+      "user_id": "usr-1791358275895-sqk5",
+      "title": "Delhi ka weather kya hai?",
+      "mode": "general"
+    },
+    "conv-1791359380221": {
+      "created_at": "2026-10-07T07:49:40.221Z",
+      "updated_at": "2026-10-07T07:49:40.266Z",
+      "id": "conv-1791359380221",
+      "user_id": "usr-1791358275895-sqk5",
+      "title": "Write a complete python script to scrape...",
+      "mode": "general"
+    },
+    "conv-1791359425734": {
+      "created_at": "2026-10-07T07:50:25.734Z",
+      "updated_at": "2026-10-07T07:50:25.769Z",
+      "id": "conv-1791359425734",
+      "user_id": "usr-1791358275895-sqk5",
+      "title": "Ek modern e-commerce checkout system ka ...",
+      "mode": "general"
+    },
+    "conv-1791359559271": {
+      "created_at": "2026-10-07T07:52:39.272Z",
+      "updated_at": "2026-10-07T07:52:39.317Z",
+      "id": "conv-1791359559271",
+      "user_id": "usr-1791358275895-sqk5",
+      "title": "Write a complete python script to scrape...",
+      "mode": "general"
+    },
+    "conv-1791359587023": {
+      "created_at": "2026-10-07T07:53:07.023Z",
+      "updated_at": "2026-10-07T07:53:07.070Z",
+      "id": "conv-1791359587023",
+      "user_id": "usr-1791358275895-sqk5",
+      "title": "Ek dynamic portfolio tracker web app ban...",
+      "mode": "general"
+    }
+  },
+  "messages": {
+    "msg-usr-1791358722254": {
+      "created_at": "2026-10-07T07:38:42.255Z",
+      "updated_at": "2026-10-07T07:38:42.255Z",
+      "id": "msg-usr-1791358722254",
+      "conversation_id": "conv-1791358722238",
+      "user_id": "usr-1791358275895-sqk5",
+      "role": "user",
+      "content": "Write a python script to download a webpage and count word frequencies",
+      "token_count": 18
+    },
+    "msg-usr-1791359187112": {
+      "created_at": "2026-10-07T07:46:27.113Z",
+      "updated_at": "2026-10-07T07:46:27.113Z",
+      "id": "msg-usr-1791359187112",
+      "conversation_id": "conv-1791359186070",
+      "user_id": "usr-1791358275895-sqk5",
+      "role": "user",
+      "content": "Write a complete python script to scrape stock prices and calculate moving average",
+      "token_count": 21
+    },
+    "msg-asst-1791359190705": {
+      "created_at": "2026-10-07T07:46:30.705Z",
+      "updated_at": "2026-10-07T07:46:30.705Z",
+      "id": "msg-asst-1791359190705",
+      "conversation_id": "conv-1791359186070",
+      "user_id": "usr-1791358275895-sqk5",
+      "role": "assistant",
+      "content": "### Action Executed: save_memory\n\n• **MEMORYID:** mem-1791359190661\n• **CONTENT:** The user is interested in Python scripts for financial data analysis, specifically stock scraping and moving averages.\n• **CATEGORY:** preference\n• **STATUS:** saved\n• **MESSAGE:** Personal memory recorded successfully in Memory Bank.",
+      "tool_calls_json": "[{\"id\":\"call_493475\",\"name\":\"save_memory\",\"arguments\":{\"category\":\"preference\",\"content\":\"The user is interested in Python scripts for financial data analysis, specifically stock scraping and moving averages.\"}}]",
+      "citations_json": "[]",
+      "token_count": 40
+    },
+    "msg-usr-1791359190759": {
+      "created_at": "2026-10-07T07:46:30.759Z",
+      "updated_at": "2026-10-07T07:46:30.759Z",
+      "id": "msg-usr-1791359190759",
+      "conversation_id": "conv-1791359190743",
+      "user_id": "usr-1791358275895-sqk5",
+      "role": "user",
+      "content": "Delhi ka weather kya hai?",
+      "token_count": 7
+    },
+    "msg-asst-1791359191890": {
+      "created_at": "2026-10-07T07:46:31.890Z",
+      "updated_at": "2026-10-07T07:46:31.891Z",
+      "id": "msg-asst-1791359191890",
+      "conversation_id": "conv-1791359190743",
+      "user_id": "usr-1791358275895-sqk5",
+      "role": "assistant",
+      "content": "### Action Executed: weather_lookup\n\n• **CITY:** Delhi\n• **TEMPERATUREC:** 23\n• **TEMPERATUREF:** 73\n• **CONDITION:** Partly Cloudy\n• **HUMIDITY:** 62%\n• **WINDSPEED:** 12 km/h\n• **TIMESTAMP:** 2026-10-07T07:46:31.871Z",
+      "tool_calls_json": "[{\"id\":\"call_502395\",\"name\":\"weather_lookup\",\"arguments\":{\"city\":\"Delhi\"}}]",
+      "citations_json": "[]",
+      "token_count": 16
+    },
+    "msg-usr-1791359380247": {
+      "created_at": "2026-10-07T07:49:40.247Z",
+      "updated_at": "2026-10-07T07:49:40.247Z",
+      "id": "msg-usr-1791359380247",
+      "conversation_id": "conv-1791359380221",
+      "user_id": "usr-1791358275895-sqk5",
+      "role": "user",
+      "content": "Write a complete python script to scrape stock prices and calculate moving average",
+      "token_count": 21
+    },
+    "msg-asst-1791359425700": {
+      "created_at": "2026-10-07T07:50:25.700Z",
+      "updated_at": "2026-10-07T07:50:25.700Z",
+      "id": "msg-asst-1791359425700",
+      "conversation_id": "conv-1791359380221",
+      "user_id": "usr-1791358275895-sqk5",
+      "role": "assistant",
+      "content": "[Gemini API call failed — switched to Prachi Local Fallback]\n\n📈 **AAPL (Apple Inc.): $228.45 USD** (+1.45%)",
+      "tool_calls_json": "[{\"id\":\"call-stock-1791359425675\",\"name\":\"stock_quote_lookup\",\"arguments\":{\"symbol\":\"AAPL\"}}]",
+      "citations_json": null,
+      "token_count": 12
+    },
+    "msg-usr-1791359425752": {
+      "created_at": "2026-10-07T07:50:25.752Z",
+      "updated_at": "2026-10-07T07:50:25.752Z",
+      "id": "msg-usr-1791359425752",
+      "conversation_id": "conv-1791359425734",
+      "user_id": "usr-1791358275895-sqk5",
+      "role": "user",
+      "content": "Ek modern e-commerce checkout system ka architecture aur security flow samjhao",
+      "token_count": 20
+    },
+    "msg-asst-1791359449498": {
+      "created_at": "2026-10-07T07:50:49.499Z",
+      "updated_at": "2026-10-07T07:50:49.499Z",
+      "id": "msg-asst-1791359449498",
+      "conversation_id": "conv-1791359425734",
+      "user_id": "usr-1791358275895-sqk5",
+      "role": "assistant",
+      "content": "Namaste Friend! Modern e-commerce checkout system ka architecture design karna kafi interesting task hai. Ek robust checkout system ko **Scalable, Secure, aur Fault-tolerant** hona chahiye.\n\nChaliye, iska detailed architecture aur security flow samajhte hain.\n\n---\n\n### 1. High-Level Architecture (Microservices Approach)\n\nModern systems monolithic nahi hote; wo microservices par based hote hain taaki heavy traffic (jaise Flash Sales) handle kar sakein.\n\n#### Key Components:\n1.  **Frontend (UI/UX):** React.js, Next.js, ya Mobile App (Flutter/Swift).\n2.  **API Gateway:** Ek single entry point (e.g., Kong, AWS API Gateway) jo authentication, rate limiting, aur routing handle karta hai.\n3.  **Cart Service:** User ke items aur discounts manage karta hai (Redis use hota hai fast access ke liye).\n4.  **Order Service:** Order create karta hai aur uska status maintain karta hai (PostgreSQL use hota hai ACID properties ke liye).\n5.  **Inventory Service:** Check karta hai ki product stock mein hai ya nahi.\n6.  **Payment Service:** External Payment Gateways (Stripe, Razorpay, PayPal) se communicate karta hai.\n7.  **Notification Service:** Email/SMS bhejta hai (Kafka ya RabbitMQ ke through asynchronous kaam karta hai).\n\n---\n\n### 2. Checkout Workflow (Step-by-Step)\n\n1.  **Initiate Checkout:** User 'Checkout' button click karta hai. `Order Service` ek \"PENDING\" order create karti hai.\n2.  **Inventory Lock:** `Inventory Service` temporarily us item ko reserve kar leti hai (Soft Lock) taaki koi aur usse na kharid le jab tak payment process ho rahi hai.\n3.  **Payment Execution:** Frontend payment details (encrypted) bhejta hai. `Payment Service` gateway se talk karti hai.\n4.  **Webhooks:** Payment successful hone par Gateway ek \"Webhook\" bhejta hai backend ko confirm karne ke liye.\n5.  **Order Fulfillment:** Order status \"COMPLETED\" hota hai, inventory permanent update hoti hai, aur Kafka ke through Notification service ko message jata hai.\n\n---\n\n### 3. Security Flow (The Most Critical Part)\n\nSecurity ke liye hum multiple layers use karte hain:\n\n#### A. Data Encryption (In-Transit & At-Rest)\n- **TLS/SSL:** Sabhi communications HTTPS ke through hoti hain.\n- **AES-256:** Sensitive data (agar store karna pade) database mein encrypt karke rakha jata hai.\n\n#### B. PCI DSS Compliance & Tokenization\n- **No Card Storage:** Modern systems kabhi bhi user ka CVV ya Card Number apne server par store nahi karte.\n- **Tokenization:** Payment gateway card details ke badle ek \"Token\" deta hai. Hum sirf wo token store karte hain. Agli baar payment ke liye wahi token use hota hai.\n\n#### C. Authentication & Authorization\n- **JWT (JSON Web Tokens):** User session ko secure karne ke liye.\n- **RBAC (Role-Based Access Control):** Sirf authorized services hi sensitive APIs ko call kar sakti hain.\n\n#### D. Idempotency (Double Payment Prevention)\n- Ye sabse zaroori hai. Agar user ne galti se do baar \"Pay\" button daba diya, to **Idempotency Key** ensure karti hai ki transaction sirf ek hi baar process ho.\n\n#### E. Fraud Detection\n- AI/ML models check karte hain ki transaction pattern suspicious to nahi hai (e.g., ek hi card se 1 minute mein 10 different locations se orders).\n\n---\n\n### 4. Tech Stack Suggestion\n\n| Layer | Technology |\n| :--- | :--- |\n| **Backend** | Node.js (NestJS) or Go (Golang) |\n| **Database** | PostgreSQL (Orders), Redis (Session/Cart) |\n| **Message Broker** | Apache Kafka or RabbitMQ |\n| **Security** | Auth0 or Keycloak for Identity Management |\n| **Monitoring** | Prometheus & Grafana |\n\n### Summary Flow Diagram (Logic):\n`User` -> `API Gateway` -> `Order Service` -> `Payment Gateway` -> `Webhook` -> `Inventory Update` -> `Success Notification`.\n\nFriend, agar aapko kisi specific part ka **Code Snippet** (jaise Idempotency implementation ya JWT logic) chahiye, to bataiye, main turant likh dunga!",
+      "tool_calls_json": null,
+      "citations_json": "[]",
+      "token_count": 973
+    },
+    "msg-usr-1791359559297": {
+      "created_at": "2026-10-07T07:52:39.297Z",
+      "updated_at": "2026-10-07T07:52:39.297Z",
+      "id": "msg-usr-1791359559297",
+      "conversation_id": "conv-1791359559271",
+      "user_id": "usr-1791358275895-sqk5",
+      "role": "user",
+      "content": "Write a complete python script to scrape stock prices and calculate moving average",
+      "token_count": 21
+    },
+    "msg-asst-1791359570956": {
+      "created_at": "2026-10-07T07:52:50.956Z",
+      "updated_at": "2026-10-07T07:52:50.956Z",
+      "id": "msg-asst-1791359570956",
+      "conversation_id": "conv-1791359559271",
+      "user_id": "usr-1791358275895-sqk5",
+      "role": "assistant",
+      "content": "Hello Friend! It is a pleasure to see you again. I know you have a keen interest in financial data analysis, so I have put together a robust, production-ready Python script for you.\n\nTo achieve this, we will use `yfinance` to fetch the data (it's the industry standard for reliable, free financial data) and `pandas` for the technical calculations.\n\n### Prerequisites\nYou will need to install these libraries if you haven't already:\n```bash\npip install yfinance pandas\n```\n\n### Python Script: Stock Price & Moving Average Analysis\n\nThis script fetches historical data, calculates both a Short-term (e.g., 20-day) and Long-term (e.g., 50-day) Moving Average, and prints the most recent data points.\n\n```python\nimport yfinance as yf\nimport pandas as pd\n\ndef analyze_stock(ticker_symbol, period=\"1y\", short_window=20, long_window=50):\n    \"\"\"\n    Fetches stock data and calculates Simple Moving Averages (SMA).\n    \"\"\"\n    print(f\"--- Fetching data for {ticker_symbol} ---\")\n    \n    # 1. Download data\n    stock = yf.Ticker(ticker_symbol)\n    df = stock.history(period=period)\n    \n    if df.empty:\n        return f\"Error: No data found for {ticker_symbol}. Check the ticker symbol.\"\n\n    # 2. Calculate Moving Averages\n    df[f'SMA_{short_window}'] = df['Close'].rolling(window=short_window).mean()\n    df[f'SMA_{long_window}'] = df['Close'].rolling(window=long_window).mean()\n    \n    # 3. Display the last 5 days of analysis\n    print(f\"\\nRecent Analysis for {ticker_symbol}:\")\n    print(df[['Close', f'SMA_{short_window}', f'SMA_{long_window}']].tail())\n    \n    return df\n\n# --- Execution ---\nif __name__ == \"__main__\":\n    # You can change the ticker to any valid stock symbol\n    ticker = \"AAPL\" \n    \n    try:\n        data = analyze_stock(ticker)\n        \n        # Optional: Save to CSV for further analysis\n        # data.to_csv(f\"{ticker}_analysis.csv\")\n        # print(f\"\\nData saved to {ticker}_analysis.csv\")\n        \n    except Exception as e:\n        print(f\"An error occurred: {e}\")\n```\n\n### How this works:\n1.  **`yfinance`**: This library acts as an interface for Yahoo Finance. The `.history()` method provides a clean Pandas DataFrame containing Open, High, Low, Close, and Volume data.\n2.  **`rolling(window=n).mean()`**: This is the core of the calculation. It creates a \"sliding window\" over your closing prices and computes the average for each point, which is exactly how a Simple Moving Average (SMA) is defined.\n3.  **Data Handling**: I have included a check to ensure the dataframe isn't empty, which is a common issue if a ticker is delisted or incorrect.\n\n**A quick tip for your financial research:** If you want to visualize these trends, you can easily add `import matplotlib.pyplot as plt` and use `df[['Close', 'SMA_20', 'SMA_50']].plot()` at the end of the script to see the crossover points!\n\nLet me know if you would like me to add RSI (Relative Strength Index) calculation or automated trading signals to this script, Friend!",
+      "tool_calls_json": null,
+      "citations_json": "[]",
+      "token_count": 801
+    },
+    "msg-usr-1791359587050": {
+      "created_at": "2026-10-07T07:53:07.050Z",
+      "updated_at": "2026-10-07T07:53:07.050Z",
+      "id": "msg-usr-1791359587050",
+      "conversation_id": "conv-1791359587023",
+      "user_id": "usr-1791358275895-sqk5",
+      "role": "user",
+      "content": "Ek dynamic portfolio tracker web app banao HTML, CSS aur JavaScript me jisme live chart aur balance calculation ho",
+      "token_count": 29
+    },
+    "msg-asst-1791359602166": {
+      "created_at": "2026-10-07T07:53:22.166Z",
+      "updated_at": "2026-10-07T07:53:22.166Z",
+      "id": "msg-asst-1791359602166",
+      "conversation_id": "conv-1791359587023",
+      "user_id": "usr-1791358275895-sqk5",
+      "role": "assistant",
+      "content": "Namaste Friend! Ek dynamic portfolio tracker banana ek bahut hi behtareen project hai. Isme hum HTML, CSS aur JavaScript ka use karenge aur chart ke liye **Chart.js** library ka istemal karenge jo ki bahut lightweight aur powerful hai.\n\nNiche ek complete, production-ready structure diya gaya hai.\n\n### Project Structure:\n1.  **index.html**: UI layout.\n2.  **style.css**: Modern styling.\n3.  **script.js**: Logic, Balance calculation aur Chart rendering.\n\n---\n\n### 1. `index.html`\n```html\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <title>Portfolio Tracker</title>\n    <link rel=\"stylesheet\" href=\"style.css\">\n    <script src=\"https://cdn.jsdelivr.net/npm/chart.js\"></script>\n</head>\n<body>\n    <div class=\"container\">\n        <h1>My Portfolio Tracker</h1>\n        <div class=\"balance-card\">\n            <h3>Total Balance: ₹<span id=\"total-balance\">0</span></h3>\n        </div>\n        \n        <div class=\"input-section\">\n            <input type=\"text\" id=\"asset-name\" placeholder=\"Asset Name (e.g., AAPL)\">\n            <input type=\"number\" id=\"asset-value\" placeholder=\"Value (₹)\">\n            <button onclick=\"addAsset()\">Add Asset</button>\n        </div>\n\n        <canvas id=\"portfolioChart\"></canvas>\n    </div>\n    <script src=\"script.js\"></script>\n</body>\n</html>\n```\n\n---\n\n### 2. `style.css`\n```css\nbody { font-family: 'Arial', sans-serif; background: #f4f7f6; padding: 20px; }\n.container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }\n.balance-card { background: #2c3e50; color: white; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 20px; }\n.input-section { display: flex; gap: 10px; margin-bottom: 20px; }\ninput { padding: 10px; flex: 1; }\nbutton { padding: 10px 20px; background: #27ae60; color: white; border: none; cursor: pointer; }\n```\n\n---\n\n### 3. `script.js`\n```javascript\nlet portfolioData = {\n    labels: [],\n    values: []\n};\n\nconst ctx = document.getElementById('portfolioChart').getContext('2d');\nconst myChart = new Chart(ctx, {\n    type: 'pie',\n    data: {\n        labels: portfolioData.labels,\n        datasets: [{\n            data: portfolioData.values,\n            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0']\n        }]\n    }\n});\n\nfunction addAsset() {\n    const name = document.getElementById('asset-name').value;\n    const value = parseFloat(document.getElementById('asset-value').value);\n\n    if (name && value) {\n        portfolioData.labels.push(name);\n        portfolioData.values.push(value);\n        \n        updateUI();\n    }\n}\n\nfunction updateUI() {\n    // Update Balance\n    const total = portfolioData.values.reduce((a, b) => a + b, 0);\n    document.getElementById('total-balance').innerText = total.toFixed(2);\n\n    // Update Chart\n    myChart.update();\n}\n```\n\n### Kaise chalayein:\n1. Teeno files ko ek folder mein save karein.\n2. `index.html` ko apne browser mein open karein.\n3. Asset ka naam aur value daalein, aur \"Add Asset\" button par click karein.\n\n**Pro Tip:** Kyunki aapne financial data analysis mein interest dikhaya hai, agle step mein hum isme `fetch` API ka use karke real-time stock prices (jaise Yahoo Finance ya Alpha Vantage API) integrate kar sakte hain.\n\nKya aap chahte hain ki main isme API integration ka logic bhi add karun?",
+      "tool_calls_json": null,
+      "citations_json": "[]",
+      "token_count": 1017
+    }
+  },
+  "memories": {
+    "mem-1791359190661": {
+      "created_at": "2026-10-07T07:46:30.661Z",
+      "updated_at": "2026-10-07T07:46:30.661Z",
+      "id": "mem-1791359190661",
+      "user_id": "usr-1791358275895-sqk5",
+      "content": "The user is interested in Python scripts for financial data analysis, specifically stock scraping and moving averages.",
+      "category": "preference",
+      "confidence": 0.95,
+      "is_active": 1
+    }
+  },
+  "audit_logs": {
+    "aud-1791359190686-o1lfh": {
+      "created_at": "2026-10-07T07:46:30.686Z",
+      "updated_at": "2026-10-07T07:46:30.686Z",
+      "id": "aud-1791359190686-o1lfh",
+      "user_id": "usr-1791358275895-sqk5",
+      "action": "TOOL_EXECUTE",
+      "resource": "save_memory",
+      "details_json": "{\"args\":{\"category\":\"preference\",\"content\":\"The user is interested in Python scripts for financial data analysis, specifically stock scraping and moving averages.\"},\"result\":{\"memoryId\":\"mem-1791359190661\",\"content\":\"The user is interested in Python scripts for financial data analysis, specifically stock scraping and moving averages.\",\"category\":\"preference\",\"status\":\"saved\",\"message\":\"Personal memory recorded successfully in Memory Bank.\"}}",
+      "ip_address": "127.0.0.1",
+      "status": "success"
+    },
+    "aud-1791359190724-k06j3": {
+      "created_at": "2026-10-07T07:46:30.724Z",
+      "updated_at": "2026-10-07T07:46:30.724Z",
+      "id": "aud-1791359190724-k06j3",
+      "user_id": "usr-1791358275895-sqk5",
+      "action": "CHAT_COMPLETION",
+      "resource": "conv-1791359186070",
+      "details_json": "{\"provider\":\"gemini\",\"modelUsed\":\"gemini-3.1-flash-lite\",\"toolCallsCount\":1,\"tokensTotal\":\"[REDACTED]\"}",
+      "ip_address": "127.0.0.1",
+      "status": "success"
+    },
+    "aud-1791359191871-9r7g1": {
+      "created_at": "2026-10-07T07:46:31.871Z",
+      "updated_at": "2026-10-07T07:46:31.871Z",
+      "id": "aud-1791359191871-9r7g1",
+      "user_id": "usr-1791358275895-sqk5",
+      "action": "TOOL_EXECUTE",
+      "resource": "weather_lookup",
+      "details_json": "{\"args\":{\"city\":\"Delhi\"},\"result\":{\"city\":\"Delhi\",\"temperatureC\":23,\"temperatureF\":73,\"condition\":\"Partly Cloudy\",\"humidity\":\"62%\",\"windSpeed\":\"12 km/h\",\"timestamp\":\"2026-10-07T07:46:31.871Z\"}}",
+      "ip_address": "127.0.0.1",
+      "status": "success"
+    },
+    "aud-1791359191907-k87b3": {
+      "created_at": "2026-10-07T07:46:31.907Z",
+      "updated_at": "2026-10-07T07:46:31.907Z",
+      "id": "aud-1791359191907-k87b3",
+      "user_id": "usr-1791358275895-sqk5",
+      "action": "CHAT_COMPLETION",
+      "resource": "conv-1791359190743",
+      "details_json": "{\"provider\":\"gemini\",\"modelUsed\":\"gemini-3.1-flash-lite\",\"toolCallsCount\":1,\"tokensTotal\":\"[REDACTED]\"}",
+      "ip_address": "127.0.0.1",
+      "status": "success"
+    },
+    "aud-1791359425675-mbvgd": {
+      "created_at": "2026-10-07T07:50:25.676Z",
+      "updated_at": "2026-10-07T07:50:25.676Z",
+      "id": "aud-1791359425675-mbvgd",
+      "user_id": "usr-1791358275895-sqk5",
+      "action": "TOOL_EXECUTE",
+      "resource": "stock_quote_lookup",
+      "details_json": "{\"args\":{\"symbol\":\"AAPL\"},\"result\":{\"symbol\":\"AAPL\",\"name\":\"Apple Inc.\",\"price\":228.45,\"change\":\"+1.85 (+0.82%)\",\"marketCap\":\"$3.45T\",\"pe\":34.2,\"range52\":\"$164.08 - $237.23\",\"timestamp\":\"2026-10-07T07:50:25.675Z\"}}",
+      "ip_address": "127.0.0.1",
+      "status": "success"
+    },
+    "aud-1791359425716-rabmm": {
+      "created_at": "2026-10-07T07:50:25.716Z",
+      "updated_at": "2026-10-07T07:50:25.717Z",
+      "id": "aud-1791359425716-rabmm",
+      "user_id": "usr-1791358275895-sqk5",
+      "action": "CHAT_COMPLETION",
+      "resource": "conv-1791359380221",
+      "details_json": "{\"provider\":\"gemini\",\"modelUsed\":\"gemini-fallback\",\"toolCallsCount\":1,\"tokensTotal\":\"[REDACTED]\"}",
+      "ip_address": "127.0.0.1",
+      "status": "success"
+    },
+    "aud-1791359449523-6lc7m": {
+      "created_at": "2026-10-07T07:50:49.523Z",
+      "updated_at": "2026-10-07T07:50:49.523Z",
+      "id": "aud-1791359449523-6lc7m",
+      "user_id": "usr-1791358275895-sqk5",
+      "action": "CHAT_COMPLETION",
+      "resource": "conv-1791359425734",
+      "details_json": "{\"provider\":\"gemini\",\"modelUsed\":\"gemini-3-flash-preview\",\"toolCallsCount\":0,\"tokensTotal\":\"[REDACTED]\"}",
+      "ip_address": "127.0.0.1",
+      "status": "success"
+    },
+    "aud-1791359570975-n8pq6": {
+      "created_at": "2026-10-07T07:52:50.975Z",
+      "updated_at": "2026-10-07T07:52:50.975Z",
+      "id": "aud-1791359570975-n8pq6",
+      "user_id": "usr-1791358275895-sqk5",
+      "action": "CHAT_COMPLETION",
+      "resource": "conv-1791359559271",
+      "details_json": "{\"provider\":\"gemini\",\"modelUsed\":\"gemini-3.1-flash-lite\",\"toolCallsCount\":0,\"tokensTotal\":\"[REDACTED]\"}",
+      "ip_address": "127.0.0.1",
+      "status": "success"
+    },
+    "aud-1791359602186-jcoyf": {
+      "created_at": "2026-10-07T07:53:22.186Z",
+      "updated_at": "2026-10-07T07:53:22.186Z",
+      "id": "aud-1791359602186-jcoyf",
+      "user_id": "usr-1791358275895-sqk5",
+      "action": "CHAT_COMPLETION",
+      "resource": "conv-1791359587023",
+      "details_json": "{\"provider\":\"gemini\",\"modelUsed\":\"gemini-3.1-flash-lite\",\"toolCallsCount\":0,\"tokensTotal\":\"[REDACTED]\"}",
+      "ip_address": "127.0.0.1",
+      "status": "success"
+    }
+  },
+  "artifacts": {
+    "art-1791359570932": {
+      "created_at": "2026-10-07T07:52:50.932Z",
+      "updated_at": "2026-10-07T07:52:50.932Z",
+      "id": "art-1791359570932",
+      "user_id": "usr-1791358275895-sqk5",
+      "title": "BASH Implementation",
+      "type": "code",
+      "content": "pip install yfinance pandas\n```\n\n### Python Script: Stock Price & Moving Average Analysis\n\nThis script fetches historical data, calculates both a Short-term (e.g., 20-day) and Long-term (e.g., 50-day) Moving Average, and prints the most recent data points.",
+      "version": 1,
+      "tags_json": "[\"ai-generated\",\"general\"]"
+    },
+    "art-1791359602142": {
+      "created_at": "2026-10-07T07:53:22.142Z",
+      "updated_at": "2026-10-07T07:53:22.142Z",
+      "id": "art-1791359602142",
+      "user_id": "usr-1791358275895-sqk5",
+      "title": "Interactive Web Application",
+      "type": "code",
+      "content": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <title>Portfolio Tracker</title>\n    <link rel=\"stylesheet\" href=\"style.css\">\n    <script src=\"https://cdn.jsdelivr.net/npm/chart.js\"></script>\n</head>\n<body>\n    <div class=\"container\">\n        <h1>My Portfolio Tracker</h1>\n        <div class=\"balance-card\">\n            <h3>Total Balance: ₹<span id=\"total-balance\">0</span></h3>\n        </div>\n        \n        <div class=\"input-section\">\n            <input type=\"text\" id=\"asset-name\" placeholder=\"Asset Name (e.g., AAPL)\">\n            <input type=\"number\" id=\"asset-value\" placeholder=\"Value (₹)\">\n            <button onclick=\"addAsset()\">Add Asset</button>\n        </div>\n\n        <canvas id=\"portfolioChart\"></canvas>\n    </div>\n    <script src=\"script.js\"></script>\n</body>\n</html>",
+      "version": 1,
+      "tags_json": "[\"ai-generated\",\"general\"]"
+    }
+  }
+}

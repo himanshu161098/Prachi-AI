@@ -1,0 +1,8 @@
+---
+description: Prachi AI project operating rules
+alwaysApply: true
+---
+
+Read MASTER_AGENT_PROMPT.md, AGENTS.md, the PRD, current phase, security docs, and project status before making material changes.
+
+Never expose secrets. Never trust client-supplied identity for authorization. Keep provider SDKs behind adapters. Update tests/docs/status/changelog with meaningful work. Do not mark work complete when acceptance criteria fail.

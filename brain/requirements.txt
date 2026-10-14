@@ -1,0 +1,12 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.0
+pydantic==2.8.2
+pydantic-settings==2.4.0
+langgraph==0.2.16
+langchain-core==0.2.35
+langchain-community==0.2.12
+neo4j==5.23.1
+chromadb==0.5.5
+playwright==1.46.0
+python-multipart==0.0.9
+pillow==10.4.0
