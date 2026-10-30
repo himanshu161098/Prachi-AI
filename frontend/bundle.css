@@ -150,6 +150,7 @@ body {
 .top-navbar {
   height: var(--navbar-height);
   background: var(--bg-glass);
+  -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
@@ -610,6 +611,7 @@ textarea.input-control {
       135deg,
       rgba(15, 23, 42, 0.95),
       rgba(30, 27, 75, 0.85));
+  -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   border: 1.5px solid rgba(99, 102, 241, 0.4);
   box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6), 0 0 18px rgba(99, 102, 241, 0.2);
@@ -776,6 +778,7 @@ textarea.input-control {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.75);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
@@ -1264,6 +1267,7 @@ textarea.input-control {
   align-items: center;
   gap: 8px;
   cursor: pointer;
+  -webkit-user-select: none;
   user-select: none;
 }
 .auth-3d-checkbox {
