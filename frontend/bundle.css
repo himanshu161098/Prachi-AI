@@ -859,8 +859,8 @@ textarea.input-control {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
   z-index: 998;
   animation: fadeIn 0.2s ease;
 }
@@ -946,8 +946,8 @@ textarea.input-control {
       circle at 50% 30%,
       rgba(15, 23, 42, 0.88),
       rgba(2, 6, 23, 0.97));
-  backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
+  backdrop-filter: blur(28px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1101,6 +1101,7 @@ textarea.input-control {
       #cbd5e1 50%,
       #94a3b8 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-bottom: 6px;
   letter-spacing: -0.5px;
