@@ -15,6 +15,8 @@ build/
 *.sqlite3
 *.db-journal
 *.db-wal
+data/*.json
+backend/data/*.json
 uploads/
 storage/
 

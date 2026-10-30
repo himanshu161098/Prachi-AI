@@ -17,7 +17,10 @@ export function verifyToken(token: string, secret: string): Record<string, any> 
   const [header, body, signature] = parts;
   const expectedSig = crypto.createHmac('sha256', secret).update(`${header}.${body}`).digest('base64url');
 
-  if (signature !== expectedSig) {
+  // Timing-safe comparison to prevent timing attacks
+  const sigBuf = Buffer.from(signature);
+  const expectedBuf = Buffer.from(expectedSig);
+  if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) {
     throw new Error('Invalid token signature');
   }
 

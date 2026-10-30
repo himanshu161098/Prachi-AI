@@ -473,8 +473,12 @@ function seedInitialData() {
 
   const userExists = db.prepare('SELECT id FROM users WHERE id = ?').get(demoUserId);
   if (!userExists) {
-    const demoPasswordHash = hashPassword('PrachiAI2026!');
-    const adminPasswordHash = hashPassword('AdminPass2026!');
+    const demoPasswordHash = hashPassword(process.env.DEMO_INITIAL_PASSWORD || 'PrachiAI2026!');
+    const adminPass = process.env.ADMIN_INITIAL_PASSWORD || (process.env.NODE_ENV === 'production' ? crypto.randomBytes(16).toString('hex') : 'AdminPass2026!');
+    const adminPasswordHash = hashPassword(adminPass);
+    if (process.env.NODE_ENV === 'production' && !process.env.ADMIN_INITIAL_PASSWORD) {
+      console.log(`[Security] Generated secure random initial admin password: ${adminPass}`);
+    }
 
     db.prepare(`
       INSERT INTO users (id, email, phone, password_hash, full_name, role, preferences_json)

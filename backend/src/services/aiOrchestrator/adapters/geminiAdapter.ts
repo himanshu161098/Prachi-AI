@@ -57,16 +57,17 @@ export class GeminiAdapter implements AIProviderAdapter {
           parts: [{ text: m.content }]
         }));
 
-      // Candidate models in verified priority order: fastest, most capable, and active
+      // Candidate models in verified priority order: active, fastest, and most capable
       const candidateModels = Array.from(new Set([
-        'gemini-flash-lite-latest',
-        'gemini-3.1-flash-lite',
-        'gemini-3-flash-preview',
-        'gemini-3.5-flash-lite',
-        'gemini-3.5-flash',
-        'gemini-3.6-flash',
+        'gemini-3.8-flash',
         'gemini-3.7-flash',
-        'gemini-3.8-flash'
+        'gemini-3.6-flash',
+        'gemini-3.5-flash',
+        'gemini-3.5-flash-lite',
+        'gemini-3.1-flash-lite',
+        'gemini-flash-latest',
+        'gemini-flash-lite-latest',
+        'gemini-3-flash-preview'
       ].filter(Boolean))) as string[];
 
       // Prepare registered tool schemas for native Gemini function calling

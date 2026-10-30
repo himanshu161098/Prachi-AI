@@ -1,0 +1,39 @@
+name: Code & Security Review CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  security-audit-and-tests:
+    name: Security Review & Backend Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: backend/package.json
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          npm ci || npm install
+
+      - name: Run Backend Security & Unit Test Suite
+        run: |
+          cd backend
+          npm test
+
+      - name: Build Frontend Bundle
+        run: |
+          cd frontend
+          node build.mjs

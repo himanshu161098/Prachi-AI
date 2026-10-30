@@ -3,7 +3,7 @@ title Prachi AI Unified Server Hub
 echo ========================================================
 echo   Starting Prachi AI Ecosystem
 echo   1. Python OmniCognitive Brain (Port 8000)
-echo   2. Node.js Full-Stack Server  (Port 5500)
+echo   2. Node.js Full-Stack Server  (Port 3001)
 echo ========================================================
 cd /d "%~dp0"
 
@@ -22,6 +22,6 @@ if %ERRORLEVEL% equ 0 (
 )
 
 REM Launch Node Backend & Frontend Static Server
-echo [INFO] Starting Node.js Backend & Frontend on Port 5500...
+echo [INFO] Starting Node.js Backend & Frontend on http://localhost:3001...
 call npm --prefix backend run dev
 pause
