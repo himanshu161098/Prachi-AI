@@ -8,8 +8,17 @@ import { config } from '../config';
 
 export const adminRouter = Router();
 
-// System Health & Overview (Public / monitoring endpoint)
+// System Health (Public lightweight probe)
 adminRouter.get('/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    service: 'Prachi AI Platform'
+  });
+});
+
+// Detailed System Diagnostics (Admin Only)
+adminRouter.get('/diagnostics', authMiddleware, adminMiddleware, (req: AuthenticatedRequest, res: Response) => {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
@@ -136,4 +145,96 @@ adminRouter.post('/apikeys', authMiddleware, adminMiddleware, (req: Authenticate
 
   res.json({ success: true, message: `Successfully updated ${provider} API key.` });
 });
+
+// Token Usage & Cost Telemetry (Admin Only)
+adminRouter.get('/token-telemetry', authMiddleware, adminMiddleware, (req: AuthenticatedRequest, res: Response) => {
+  const logs = db.prepare(`
+    SELECT provider, model, SUM(prompt_tokens) as total_prompt, SUM(completion_tokens) as total_completion, SUM(total_tokens) as grand_total, SUM(estimated_cost_usd) as total_cost, count(*) as call_count
+    FROM token_usage_logs
+    GROUP BY provider, model
+  `).all() as any[];
+
+  const recent = db.prepare(`
+    SELECT id, user_id, provider, model, prompt_tokens, completion_tokens, total_tokens, estimated_cost_usd, created_at
+    FROM token_usage_logs
+    ORDER BY created_at DESC
+    LIMIT 30
+  `).all();
+
+  const totalCost = logs.reduce((sum, r) => sum + (Number(r.total_cost) || 0), 0);
+  const totalTokens = logs.reduce((sum, r) => sum + (Number(r.grand_total) || 0), 0);
+
+  res.json({
+    summary: {
+      totalCostUsd: Math.round(totalCost * 10000) / 10000,
+      totalTokens,
+      providerBreakdown: logs
+    },
+    recentCalls: recent
+  });
+});
+
+// Full User Directory (Admin Only)
+adminRouter.get('/users', authMiddleware, adminMiddleware, (req: AuthenticatedRequest, res: Response) => {
+  const users = db.prepare(`
+    SELECT id, email, phone, full_name, role, created_at, updated_at
+    FROM users
+    ORDER BY created_at DESC
+  `).all();
+
+  res.json({ users, total: users.length });
+});
+
+// Update User Role (Admin Only)
+adminRouter.patch('/users/:id/role', authMiddleware, adminMiddleware, (req: AuthenticatedRequest, res: Response): void => {
+  const { role } = req.body;
+  if (role !== 'user' && role !== 'admin') {
+    res.status(400).json({ error: 'BadRequest', message: 'Role must be either "user" or "admin"' });
+    return;
+  }
+
+  const result = db.prepare(`
+    UPDATE users SET role = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?
+  `).run(role, req.params.id);
+
+  if (result.changes === 0) {
+    res.status(404).json({ error: 'NotFound', message: 'User not found' });
+    return;
+  }
+
+  AuditService.log({
+    userId: req.user!.id,
+    action: 'USER_ROLE_CHANGE',
+    resource: req.params.id,
+    details: { targetRole: role }
+  });
+
+  res.json({ success: true, message: `User role updated to ${role}.` });
+});
+
+// Specialized Agent Analytics (Admin Only)
+adminRouter.get('/agent-stats', authMiddleware, adminMiddleware, (req: AuthenticatedRequest, res: Response) => {
+  const stats = db.prepare(`
+    SELECT agent_type, status, count(*) as count
+    FROM agent_executions
+    GROUP BY agent_type, status
+  `).all();
+
+  res.json({ stats });
+});
+
+// Storage and Artifact Analytics (Admin Only)
+adminRouter.get('/storage-stats', authMiddleware, adminMiddleware, (req: AuthenticatedRequest, res: Response) => {
+  const docStats = db.prepare('SELECT count(*) as doc_count, COALESCE(SUM(file_size), 0) as total_bytes FROM documents').get() as any;
+  const artifactStats = db.prepare('SELECT type, count(*) as count FROM artifacts GROUP BY type').all();
+
+  res.json({
+    documents: {
+      totalDocs: docStats.doc_count,
+      totalSizeMB: Math.round((docStats.total_bytes / (1024 * 1024)) * 100) / 100
+    },
+    artifacts: artifactStats
+  });
+});
+
 

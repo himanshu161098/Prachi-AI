@@ -8,7 +8,7 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "test": "tsx --test tests/auth.test.ts tests/email_otp_auth.test.ts tests/forecasting.test.ts tests/tools.test.ts tests/rag_ai.test.ts tests/omnibrain.test.ts"
+    "test": "tsx --test --test-concurrency=1 tests/auth.test.ts tests/email_otp_auth.test.ts tests/forecasting.test.ts tests/tools.test.ts tests/rag_ai.test.ts tests/omnibrain.test.ts tests/master_enhancement_modules.test.ts"
   },
   "dependencies": {
     "cors": "^2.8.6",

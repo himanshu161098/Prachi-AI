@@ -118,69 +118,58 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
 
-      <div className="navbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div className="navbar-actions">
         {/* Back to Portfolio Link */}
         <a
           href="../index.html"
           onClick={handleReturnToPortfolio}
           className="btn btn-secondary btn-sm nav-portfolio-link"
           title="Return to Personal Portfolio"
-          style={{ display: 'flex', alignItems: 'center', gap: '6px', textDecoration: 'none', color: 'inherit' }}
         >
           <ArrowLeft size={15} style={{ color: 'var(--accent-indigo)' }} />
-          <span>Portfolio</span>
+          <span className="nav-portfolio-text">Portfolio</span>
         </a>
+
         {/* Model Selector */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-surface)', padding: '4px 12px', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
+        <div className="nav-model-selector-wrapper">
           <Cpu size={15} style={{ color: 'var(--accent-indigo)' }} />
           <select
             value={currentModel}
             onChange={(e) => onModelChange(e.target.value)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--text-primary)',
-              fontSize: '0.85rem',
-              fontWeight: 500,
-              cursor: 'pointer',
-              outline: 'none'
-            }}
+            className="nav-model-select"
           >
-            <option value="gemini" style={{ background: '#0f172a' }}>Prachi AI Cognitive Core (Smart Best Friend ✨)</option>
-            <option value="local_heuristic" style={{ background: '#0f172a' }}>Prachi Local Heuristic (Offline)</option>
-            <option value="claude" style={{ background: '#0f172a' }}>Anthropic Claude 3.5 Sonnet</option>
             <option value="openai" style={{ background: '#0f172a' }}>OpenAI GPT-4o</option>
+            <option value="gemini" style={{ background: '#0f172a' }}>Prachi Cognitive Core ✨</option>
+            <option value="local_heuristic" style={{ background: '#0f172a' }}>Offline Heuristic</option>
+            <option value="claude" style={{ background: '#0f172a' }}>Claude 3.5 Sonnet</option>
           </select>
         </div>
 
         {/* Voice Trigger */}
         <button
-          className="btn btn-secondary btn-sm"
+          className="btn btn-secondary btn-sm nav-voice-btn"
           onClick={onOpenVoice}
           title="Interactive Voice Assistant"
-          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
         >
           <Mic size={15} style={{ color: 'var(--accent-cyan)' }} />
-          <span>Voice</span>
+          <span className="nav-btn-text">Voice</span>
         </button>
 
         {/* Tour Guide Button */}
         <button
-          className="btn btn-secondary btn-sm"
+          className="btn btn-secondary btn-sm nav-tour-btn"
           onClick={onOpenTour}
           title="Interactive Feature Guide"
-          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
         >
           <HelpCircle size={15} style={{ color: 'var(--accent-indigo)' }} />
-          <span>Tour</span>
+          <span className="nav-btn-text">Tour</span>
         </button>
 
         {/* Theme Toggle */}
         <button
-          className="btn btn-secondary btn-sm"
+          className="btn btn-secondary btn-sm nav-theme-btn"
           onClick={onToggleTheme}
           title="Toggle Light/Dark Theme"
-          style={{ padding: '6px 10px' }}
         >
           {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
         </button>

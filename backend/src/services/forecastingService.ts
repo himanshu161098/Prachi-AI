@@ -325,4 +325,116 @@ export class ForecastingService {
       }
     };
   }
+
+  /**
+   * Statistical Anomaly & Outlier Detection (Z-Score + Interquartile Range)
+   */
+  static detectAnomalies(values: number[], thresholdZ = 2.0): {
+    anomalies: Array<{ index: number; value: number; zScore: number; reason: string }>;
+    stats: { mean: number; stdDev: number; median: number; iqr: number; q1: number; q3: number };
+  } {
+    if (values.length < 3) {
+      return { anomalies: [], stats: { mean: 0, stdDev: 0, median: 0, iqr: 0, q1: 0, q3: 0 } };
+    }
+
+    const n = values.length;
+    const mean = values.reduce((a, b) => a + b, 0) / n;
+    const variance = values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / (n - 1);
+    const stdDev = Math.sqrt(variance) || 1e-6;
+
+    const sorted = [...values].sort((a, b) => a - b);
+    const q1 = sorted[Math.floor(n * 0.25)];
+    const median = sorted[Math.floor(n * 0.5)];
+    const q3 = sorted[Math.floor(n * 0.75)];
+    const iqr = q3 - q1;
+    const lowerIqr = q1 - 1.5 * iqr;
+    const upperIqr = q3 + 1.5 * iqr;
+
+    const anomalies: Array<{ index: number; value: number; zScore: number; reason: string }> = [];
+
+    values.forEach((val, idx) => {
+      const z = (val - mean) / stdDev;
+      const isZAnomaly = Math.abs(z) >= thresholdZ;
+      const isIqrAnomaly = val < lowerIqr || val > upperIqr;
+
+      if (isZAnomaly || isIqrAnomaly) {
+        anomalies.push({
+          index: idx,
+          value: val,
+          zScore: Math.round(z * 100) / 100,
+          reason: isZAnomaly && isIqrAnomaly
+            ? `Extreme outlier (|Z|=${Math.round(z * 10) / 10} > ${thresholdZ} and outside IQR bounds [${Math.round(lowerIqr)}, ${Math.round(upperIqr)}])`
+            : isZAnomaly ? `Z-Score exceeds threshold (${Math.round(z * 10) / 10})` : 'Exceeds IQR distribution bounds'
+        });
+      }
+    });
+
+    return {
+      anomalies,
+      stats: {
+        mean: Math.round(mean * 100) / 100,
+        stdDev: Math.round(stdDev * 100) / 100,
+        median: Math.round(median * 100) / 100,
+        iqr: Math.round(iqr * 100) / 100,
+        q1: Math.round(q1 * 100) / 100,
+        q3: Math.round(q3 * 100) / 100
+      }
+    };
+  }
+
+  /**
+   * K-Means 1D Data Clustering & Segmentation
+   */
+  static clusterSegments(values: number[], k = 3): Array<{
+    clusterIndex: number;
+    centroid: number;
+    label: string;
+    count: number;
+    points: number[];
+  }> {
+    if (values.length === 0) return [];
+    const clusterCount = Math.min(k, values.length);
+
+    const sorted = [...values].sort((a, b) => a - b);
+    let centroids = Array.from({ length: clusterCount }, (_, i) => {
+      const idx = Math.floor((i + 0.5) * (sorted.length / clusterCount));
+      return sorted[idx];
+    });
+
+    let clusters: number[][] = Array.from({ length: clusterCount }, () => []);
+
+    // 10 K-Means iterations
+    for (let iter = 0; iter < 10; iter++) {
+      clusters = Array.from({ length: clusterCount }, () => []);
+      for (const val of values) {
+        let minDist = Infinity;
+        let bestCluster = 0;
+        for (let c = 0; c < clusterCount; c++) {
+          const dist = Math.abs(val - centroids[c]);
+          if (dist < minDist) {
+            minDist = dist;
+            bestCluster = c;
+          }
+        }
+        clusters[bestCluster].push(val);
+      }
+
+      // Recompute centroids
+      for (let c = 0; c < clusterCount; c++) {
+        if (clusters[c].length > 0) {
+          centroids[c] = clusters[c].reduce((a, b) => a + b, 0) / clusters[c].length;
+        }
+      }
+    }
+
+    const labels = ['Low Tier', 'Mid Tier', 'High Tier', 'Very High Tier'];
+
+    return centroids.map((c, idx) => ({
+      clusterIndex: idx,
+      centroid: Math.round(c * 100) / 100,
+      label: labels[idx] || `Cluster ${idx + 1}`,
+      count: clusters[idx].length,
+      points: clusters[idx]
+    })).sort((a, b) => a.centroid - b.centroid);
+  }
 }

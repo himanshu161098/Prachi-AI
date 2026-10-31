@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, BarChart3, Sliders, AlertTriangle, ShieldCheck, Download, Sparkles } from 'lucide-react';
+import { TrendingUp, BarChart3, Sliders, AlertTriangle, ShieldCheck, Download, Sparkles, Layers, Activity, PieChart, ShieldAlert, Cpu } from 'lucide-react';
 import { api } from '../../services/api';
 import { ForecastResult } from '../../types';
 
@@ -11,6 +11,15 @@ export const ForecastingView: React.FC = () => {
   const [smoothingFactor, setSmoothingFactor] = useState<number>(0.3);
   const [result, setResult] = useState<ForecastResult | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Machine Learning Intelligence State (Module 8)
+  const [anomalyResult, setAnomalyResult] = useState<any>(null);
+  const [anomalyThreshold, setAnomalyThreshold] = useState<number>(2.0);
+  const [anomalyLoading, setAnomalyLoading] = useState(false);
+
+  const [clusteringResult, setClusteringResult] = useState<any>(null);
+  const [kClusters, setKClusters] = useState<number>(3);
+  const [clusteringLoading, setClusteringLoading] = useState(false);
 
   const runForecast = async (preset = selectedPreset, mType = modelType, h = horizon) => {
     setLoading(true);
@@ -42,6 +51,34 @@ export const ForecastingView: React.FC = () => {
   useEffect(() => {
     loadPresetsAndInitialForecast();
   }, []);
+
+  const handleRunAnomalyDetection = async () => {
+    if (!result || !result.history) return;
+    setAnomalyLoading(true);
+    try {
+      const values = result.history.map(h => h.value);
+      const res = await api.detectAnomalies(values, anomalyThreshold);
+      setAnomalyResult(res);
+    } catch (e: any) {
+      alert(`Anomaly detection failed: ${e.message || 'Unknown error'}`);
+    } finally {
+      setAnomalyLoading(false);
+    }
+  };
+
+  const handleRunClustering = async () => {
+    if (!result || !result.history) return;
+    setClusteringLoading(true);
+    try {
+      const values = result.history.map(h => h.value);
+      const res = await api.clusterSegments(values, kClusters);
+      setClusteringResult(res);
+    } catch (e: any) {
+      alert(`Clustering failed: ${e.message || 'Unknown error'}`);
+    } finally {
+      setClusteringLoading(false);
+    }
+  };
 
   // SVG Chart Calculation
   const renderChart = () => {
@@ -294,6 +331,143 @@ export const ForecastingView: React.FC = () => {
           }}>
             <AlertTriangle size={18} style={{ flexShrink: 0 }} />
             <span>{result.disclaimer}</span>
+          </div>
+
+          {/* Machine Learning & Statistical Intelligence (Module 8) */}
+          <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ padding: '6px', borderRadius: '8px', background: 'rgba(99, 102, 241, 0.15)', color: 'var(--accent-indigo)' }}>
+                  <Cpu size={20} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.05rem', fontWeight: 700 }}>Machine Learning & Statistical Intelligence</h3>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                    Advanced statistical anomaly detection (Z-Score + IQR) & Unsupervised 1D K-Means clustering.
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid-2">
+              {/* Anomaly Detection Sub-panel */}
+              <div style={{ padding: '16px', borderRadius: '10px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <h4 style={{ fontSize: '0.92rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Activity size={16} style={{ color: 'var(--accent-rose)' }} />
+                    <span>Outlier & Anomaly Detection</span>
+                  </h4>
+                  <span className="badge badge-rose">Z-Score & IQR</span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                    Z-Threshold: <strong>{anomalyThreshold.toFixed(1)}σ</strong>
+                  </label>
+                  <input
+                    type="range"
+                    min="1.2"
+                    max="3.5"
+                    step="0.1"
+                    value={anomalyThreshold}
+                    onChange={(e) => setAnomalyThreshold(parseFloat(e.target.value))}
+                    style={{ flex: 1, accentColor: 'var(--accent-rose)' }}
+                  />
+                </div>
+
+                <button
+                  className="btn btn-secondary"
+                  onClick={handleRunAnomalyDetection}
+                  disabled={anomalyLoading}
+                  style={{ width: '100%', borderColor: 'rgba(244, 63, 94, 0.4)' }}
+                >
+                  <ShieldAlert size={15} style={{ color: 'var(--accent-rose)' }} />
+                  <span>{anomalyLoading ? 'Detecting Anomalies...' : 'Run Statistical Anomaly Detection'}</span>
+                </button>
+
+                {anomalyResult && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                      <span>Mean: {anomalyResult.stats?.mean}</span>
+                      <span>StdDev: {anomalyResult.stats?.stdDev}</span>
+                      <span>IQR: {anomalyResult.stats?.iqr}</span>
+                    </div>
+
+                    <div style={{ fontSize: '0.82rem', fontWeight: 600, color: anomalyResult.anomalyCount > 0 ? 'var(--accent-rose)' : 'var(--accent-emerald)' }}>
+                      {anomalyResult.anomalyCount} anomalies flagged among {anomalyResult.totalRecords} records.
+                    </div>
+
+                    {anomalyResult.anomalies?.length > 0 ? (
+                      <div style={{ maxHeight: '140px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        {anomalyResult.anomalies.map((an: any, idx: number) => (
+                          <div key={idx} style={{ padding: '6px 10px', borderRadius: '6px', background: 'rgba(244, 63, 94, 0.08)', border: '1px solid rgba(244, 63, 94, 0.2)', fontSize: '0.76rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span>Index #{an.index} (Val: <strong>{an.value}</strong>)</span>
+                            <span style={{ color: 'var(--accent-rose)' }}>Z: {an.zScore}σ • {an.reason}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textAlign: 'center', padding: '8px' }}>
+                        No data points exceed {anomalyThreshold}σ variance bounds.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* K-Means Clustering Sub-panel */}
+              <div style={{ padding: '16px', borderRadius: '10px', background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <h4 style={{ fontSize: '0.92rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <PieChart size={16} style={{ color: 'var(--accent-cyan)' }} />
+                    <span>Unsupervised 1D K-Means</span>
+                  </h4>
+                  <span className="badge badge-cyan">k = {kClusters}</span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                    Clusters (k): <strong>{kClusters}</strong>
+                  </label>
+                  <input
+                    type="range"
+                    min="2"
+                    max="5"
+                    step="1"
+                    value={kClusters}
+                    onChange={(e) => setKClusters(parseInt(e.target.value, 10))}
+                    style={{ flex: 1, accentColor: 'var(--accent-cyan)' }}
+                  />
+                </div>
+
+                <button
+                  className="btn btn-secondary"
+                  onClick={handleRunClustering}
+                  disabled={clusteringLoading}
+                  style={{ width: '100%', borderColor: 'rgba(6, 182, 212, 0.4)' }}
+                >
+                  <Sparkles size={15} style={{ color: 'var(--accent-cyan)' }} />
+                  <span>{clusteringLoading ? 'Clustering...' : 'Run 1D K-Means Clustering'}</span>
+                </button>
+
+                {clusteringResult && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                      Total Variance: <strong>{clusteringResult.variance}</strong> • Iterations: <strong>{clusteringResult.iterations}</strong>
+                    </div>
+
+                    <div style={{ maxHeight: '140px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {clusteringResult.clusters?.map((c: any) => (
+                        <div key={c.clusterIndex} style={{ padding: '6px 10px', borderRadius: '6px', background: 'rgba(6, 182, 212, 0.08)', border: '1px solid rgba(6, 182, 212, 0.2)', fontSize: '0.76rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span>Cluster #{c.clusterIndex + 1} (Centroid: <strong>{c.centroid}</strong>)</span>
+                          <span style={{ color: 'var(--accent-cyan)' }}>{c.memberCount} items ({Math.min(...c.memberValues)} - {Math.max(...c.memberValues)})</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}

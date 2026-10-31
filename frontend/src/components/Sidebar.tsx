@@ -51,6 +51,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { user } = useAuth();
 
+  React.useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileOpen]);
+
   const navItems: Array<{ id: NavView; label: string; icon: React.ReactNode; badge?: string; adminOnly?: boolean }> = [
     { id: 'chat', label: 'AI Chat & Assistant', icon: <MessageSquare size={18} /> },
     { id: 'omnibrain', label: 'OmniCognitive Brain', icon: <Cpu size={18} />, badge: 'GraphRAG' },
@@ -70,7 +81,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {mobileOpen && (
         <div className="sidebar-mobile-backdrop" onClick={onCloseMobile} />
       )}
-      <aside className={`app-sidebar ${mobileOpen ? 'mobile-open' : ''}`} style={{ width: collapsed ? '72px' : '260px' }}>
+      <aside className={`app-sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-header">
           {!collapsed && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

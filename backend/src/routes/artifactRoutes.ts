@@ -112,6 +112,17 @@ artifactRouter.post('/images/generate', authMiddleware, (req: AuthenticatedReque
 
   // Generate crisp procedural SVG graphic based on prompt theme
   const isCyber = cleanPrompt.toLowerCase().includes('cyber') || cleanPrompt.toLowerCase().includes('shield') || cleanPrompt.toLowerCase().includes('security');
+  // SECURITY: Escape XML special characters to prevent Stored SVG XSS
+  const escapeXml = (str: string): string => {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+  };
+
+  const safePrompt = escapeXml(cleanPrompt);
   const isAi = cleanPrompt.toLowerCase().includes('ai') || cleanPrompt.toLowerCase().includes('brain') || cleanPrompt.toLowerCase().includes('neural');
 
   const primaryColor = isCyber ? '#10b981' : isAi ? '#6366f1' : '#06b6d4';
@@ -133,7 +144,7 @@ artifactRouter.post('/images/generate', authMiddleware, (req: AuthenticatedReque
     `  <circle cx="${width / 2}" cy="${height / 2 - 30}" r="70" fill="none" stroke="url(#glow)" stroke-width="4" stroke-dasharray="10 5" opacity="0.8" />`,
     `  <polygon points="${width / 2},${height / 2 - 80} ${width / 2 + 50},${height / 2 - 10} ${width / 2 - 50},${height / 2 - 10}" fill="${primaryColor}" opacity="0.3" stroke="${primaryColor}" stroke-width="2" />`,
     `  <circle cx="${width / 2}" cy="${height / 2 - 30}" r="25" fill="${primaryColor}" />`,
-    `  <text x="${width / 2}" y="${height / 2 + 80}" text-anchor="middle" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="18" font-weight="700">${cleanPrompt}</text>`,
+    `  <text x="${width / 2}" y="${height / 2 + 80}" text-anchor="middle" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="18" font-weight="700">${safePrompt}</text>`,
     `  <text x="${width / 2}" y="${height / 2 + 105}" text-anchor="middle" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="12">Prachi AI Visual Studio • Procedural Synthesis</text>`,
     `</svg>`
   ].join('\n');
@@ -160,9 +171,19 @@ artifactRouter.post('/images/:id/edit', authMiddleware, (req: AuthenticatedReque
     return;
   }
 
+  const escapeXml = (str: string): string => {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+  };
+
   let editedContent = existing.content;
   if (overlayText) {
-    editedContent = editedContent.replace('</svg>', `  <text x="30" y="40" fill="#38bdf8" font-family="sans-serif" font-size="14" font-weight="600">${overlayText}</text>\n</svg>`);
+    const safeOverlay = escapeXml(overlayText);
+    editedContent = editedContent.replace('</svg>', `  <text x="30" y="40" fill="#38bdf8" font-family="sans-serif" font-size="14" font-weight="600">${safeOverlay}</text>\n</svg>`);
   }
 
   const newVersion = existing.version + 1;

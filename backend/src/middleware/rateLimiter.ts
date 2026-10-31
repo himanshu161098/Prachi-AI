@@ -34,12 +34,28 @@ export function createRateLimiter(options: {
       return;
     }
 
-    const ip = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
+    // Safely extract client IP using Express req.ip (honors trust proxy configuration)
+    let clientIp = req.ip;
+    if (!clientIp) {
+      const forwarded = req.headers['x-forwarded-for'];
+      if (typeof forwarded === 'string') {
+        clientIp = forwarded.split(',')[0].trim();
+      } else {
+        clientIp = req.socket.remoteAddress || '127.0.0.1';
+      }
+    }
+
+    // Compound key: If request targets a specific user identifier, rate limit both IP and account
+    const targetId = typeof req.body?.identifier === 'string'
+      ? req.body.identifier.toLowerCase().trim()
+      : (typeof req.body?.email === 'string' ? req.body.email.toLowerCase().trim() : '');
+    const key = targetId ? `${clientIp}:${targetId}` : clientIp;
+
     const now = Date.now();
-    const record = store.get(ip);
+    const record = store.get(key);
 
     if (!record || now > record.resetTime) {
-      store.set(ip, {
+      store.set(key, {
         count: 1,
         resetTime: now + options.windowMs,
       });

@@ -31,10 +31,22 @@ for (const envPath of possibleEnvPaths) {
   }
 }
 
+import crypto from 'crypto';
+
+const resolvedJwtSecret = process.env.JWT_SECRET || (
+  process.env.NODE_ENV === 'production'
+    ? (() => {
+        const generated = crypto.randomBytes(64).toString('hex');
+        console.warn('[Security Warning] JWT_SECRET was not set in production. Generated ephemeral random 64-byte key for process lifetime.');
+        return generated;
+      })()
+    : 'prachi-dev-secret-' + crypto.randomBytes(16).toString('hex')
+);
+
 export const config = {
   port: parseInt(process.env.PORT || '3001', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
-  jwtSecret: process.env.JWT_SECRET || 'prachi-ai-default-secure-jwt-key-production-replace',
+  jwtSecret: resolvedJwtSecret,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
   dbPath: process.env.DB_PATH || path.resolve(process.cwd(), 'data', 'prachi.db'),
   uploadDir: process.env.UPLOAD_DIR || path.resolve(process.cwd(), 'uploads'),
@@ -68,10 +80,17 @@ export const config = {
     }
   },
   ai: {
-    defaultProvider: process.env.DEFAULT_AI_PROVIDER || 'local_heuristic', // 'gemini' | 'openai' | 'claude' | 'local_heuristic'
-    geminiApiKey: process.env.GEMINI_API_KEY || '',
+    defaultProvider: process.env.DEFAULT_AI_PROVIDER || 'openai', // 'openai' | 'gemini' | 'claude' | 'local_heuristic'
+    defaultOpenAIModel: process.env.DEFAULT_OPENAI_MODEL || 'gpt-4o-mini',
     openaiApiKey: process.env.OPENAI_API_KEY || '',
+    geminiApiKey: process.env.GEMINI_API_KEY || '',
     claudeApiKey: process.env.ANTHROPIC_API_KEY || '',
+    models: {
+      fast: 'gpt-4o-mini',
+      advanced: 'gpt-4o',
+      reasoning: 'o1-mini',
+      embedding: 'text-embedding-3-small'
+    }
   },
   rateLimit: {
     windowMs: 15 * 60 * 1000, // 15 minutes

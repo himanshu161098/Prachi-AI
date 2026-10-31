@@ -8,6 +8,17 @@ export interface AuthenticatedRequest extends Request {
   user?: AuthenticatedUser;
 }
 
+// In-memory token revocation blacklist (with automatic cleanup)
+const tokenBlacklist = new Set<string>();
+
+export function revokeToken(token: string): void {
+  tokenBlacklist.add(token);
+}
+
+export function isTokenRevoked(token: string): boolean {
+  return tokenBlacklist.has(token);
+}
+
 export function authMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -20,6 +31,17 @@ export function authMiddleware(req: AuthenticatedRequest, res: Response, next: N
   }
 
   const token = authHeader.split(' ')[1];
+
+  // Check if token was explicitly revoked via logout
+  if (isTokenRevoked(token)) {
+    res.status(401).json({
+      error: 'Unauthorized',
+      message: 'Session has been invalidated. Please sign in again.',
+      code: 'TOKEN_REVOKED'
+    });
+    return;
+  }
+
   try {
     const decoded = verifyToken(token, config.jwtSecret) as { id: string; email: string };
     

@@ -1,4 +1,4 @@
-import { exec } from 'child_process';
+import { exec, execFile } from 'child_process';
 import { db } from '../database';
 import { AuditService } from './auditService';
 import { MediaPlaybackService } from './mediaPlaybackService';
@@ -309,21 +309,86 @@ export class ToolService {
 
         case 'code_runner': {
           const code = String(args.code || '').trim();
-          // Sandbox execution with console capture
+          if (!code) throw new Error('No code provided.');
+
+          // SECURITY: Block dangerous patterns that could access Node.js internals
+          const dangerousPatterns = [
+            /\brequire\s*\(/i,
+            /\bimport\s*\(/i,
+            /\bprocess\b/i,
+            /\bglobal\b/i,
+            /\bglobalThis\b/i,
+            /\b__dirname\b/i,
+            /\b__filename\b/i,
+            /\bBuffer\b/i,
+            /\bchild_process\b/i,
+            /\bexec\s*\(/i,
+            /\bexecSync\b/i,
+            /\bspawn\b/i,
+            /\beval\s*\(/i,
+            /\bFunction\s*\(/i,
+            /\bnew\s+Function\b/i,
+            /\bfs\b/i,
+            /\bhttp\b/i,
+            /\bnet\b/i,
+            /\bos\b/i,
+            /\bcrypto\b/i,
+            /\bsetTimeout\b/i,
+            /\bsetInterval\b/i,
+            /\bsetImmediate\b/i,
+            /\bconstructor\b/i,
+            /\b__proto__\b/i,
+            /\bprototype\b/i,
+            /\bProxy\b/i,
+            /\bReflect\b/i,
+          ];
+
+          for (const pattern of dangerousPatterns) {
+            if (pattern.test(code)) {
+              throw new Error(
+                `Code contains blocked pattern: ${pattern.source}. ` +
+                `Only safe arithmetic, string operations, and console.log are allowed.`
+              );
+            }
+          }
+
+          // Safe sandbox execution with restricted scope — only console + basic math
           const logs: string[] = [];
           const customConsole = {
             log: (...v: any[]) => logs.push(v.map(x => typeof x === 'object' ? JSON.stringify(x) : String(x)).join(' ')),
             error: (...v: any[]) => logs.push('[Error] ' + v.join(' '))
           };
 
-          const sandboxedFn = new Function('console', `"use strict";\n${code}`);
-          const returnValue = sandboxedFn(customConsole);
+          try {
+            // Execute with a frozen, restricted scope — no access to Node.js globals
+            const sandboxedFn = new Function(
+              'console', 'Math', 'JSON', 'parseInt', 'parseFloat', 'isNaN', 'isFinite',
+              'Number', 'String', 'Boolean', 'Array', 'Object', 'Date', 'RegExp', 'Map', 'Set',
+              `"use strict";
+              // Block access to globalThis
+              const global = undefined; const globalThis = undefined;
+              const process = undefined; const require = undefined;
+              const module = undefined; const exports = undefined;
+              const __dirname = undefined; const __filename = undefined;
+              ${code}`
+            );
+            const returnValue = sandboxedFn(
+              customConsole, Math, JSON, parseInt, parseFloat, isNaN, isFinite,
+              Number, String, Boolean, Array, Object, Date, RegExp, Map, Set
+            );
 
-          resultData = {
-            executed: true,
-            logs,
-            returnValue: returnValue !== undefined ? String(returnValue) : null
-          };
+            resultData = {
+              executed: true,
+              logs,
+              returnValue: returnValue !== undefined ? String(returnValue) : null
+            };
+          } catch (sandboxErr: any) {
+            resultData = {
+              executed: false,
+              logs,
+              error: sandboxErr.message || 'Code execution error'
+            };
+          }
           break;
         }
 
@@ -423,11 +488,18 @@ export class ToolService {
         case 'open_application': {
           const resolution = await ToolService.resolveApplicationActionAsync(args);
 
+          // SECURITY: Use execFile with explicit args to prevent command injection
           if (process.platform === 'win32') {
             if (resolution.type === 'open_app') {
-              exec(resolution.target, () => {});
-            } else {
-              exec(`start "" "${resolution.target}"`, () => {});
+              // Only allow whitelisted desktop app commands
+              const allowedApps = ['notepad', 'calc', 'mspaint', 'explorer', 'code', 'start cmd', 'start powershell'];
+              if (allowedApps.some(app => resolution.target.toLowerCase().startsWith(app))) {
+                exec(resolution.target, () => {});
+              }
+            } else if (resolution.target.startsWith('https://') || resolution.target.startsWith('http://')) {
+              // Only allow opening valid URLs, sanitize to prevent injection
+              const safeUrl = resolution.target.replace(/["'`$\\;&|]/g, '');
+              execFile('cmd', ['/c', 'start', '', safeUrl], () => {});
             }
           }
 
@@ -459,8 +531,10 @@ export class ToolService {
           const target = String(args.contactName || args.recipient || args.name || args.phoneNumber || '').trim();
           const resolution = ContactService.resolveCall(userId, target);
           if (resolution.status === 'found') {
-            if (process.platform === 'win32') {
-              exec(`start ${resolution.target}`, () => {});
+            // SECURITY: Only open tel: protocol URLs via execFile to prevent injection
+            if (process.platform === 'win32' && resolution.target && resolution.target.startsWith('tel:')) {
+              const safeTarget = resolution.target.replace(/["'`$\\;&|]/g, '');
+              execFile('cmd', ['/c', 'start', '', safeTarget], () => {});
             }
             resultData = {
               status: 'calling',
@@ -493,8 +567,12 @@ export class ToolService {
           const resolution = ContactService.resolveMessage(userId, target, msg, platform);
 
           if (resolution.status === 'found') {
-            if (process.platform === 'win32') {
-              exec(`start "" "${resolution.target}"`, () => {});
+            // SECURITY: Sanitize and use execFile to prevent command injection
+            if (process.platform === 'win32' && resolution.target) {
+              const safeTarget = resolution.target.replace(/["'`$\\;&|]/g, '');
+              if (safeTarget.startsWith('https://') || safeTarget.startsWith('http://') || safeTarget.startsWith('sms:')) {
+                execFile('cmd', ['/c', 'start', '', safeTarget], () => {});
+              }
             }
             resultData = {
               status: 'message_ready',

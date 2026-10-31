@@ -52,17 +52,31 @@ ragRouter.get('/documents', authMiddleware, (req: AuthenticatedRequest, res: Res
 ragRouter.post('/ingest-text', authMiddleware, (req: AuthenticatedRequest, res: Response): void => {
   const { filename, content, mimeType } = req.body;
 
-  if (!filename || !content) {
-    res.status(400).json({ error: 'BadRequest', message: 'filename and content are required' });
+  if (!filename || typeof filename !== 'string' || !content || typeof content !== 'string') {
+    res.status(400).json({ error: 'BadRequest', message: 'Valid filename and content strings are required' });
     return;
   }
 
-  const safePath = path.join(config.uploadDir, `text_${Date.now()}.txt`);
+  // SECURITY: Limit text body size to 1MB to prevent disk exhaustion
+  if (content.length > 1024 * 1024) {
+    res.status(413).json({ error: 'PayloadTooLarge', message: 'Text content exceeds maximum limit of 1MB' });
+    return;
+  }
+
+  // SECURITY: Sanitize filename to prevent path traversal
+  const safeFilename = path.basename(filename).replace(/[^a-zA-Z0-9._\- ]/g, '_').slice(0, 100) || 'document.txt';
+
+  // Ensure upload directory exists
+  if (!fs.existsSync(config.uploadDir)) {
+    fs.mkdirSync(config.uploadDir, { recursive: true });
+  }
+
+  const safePath = path.join(config.uploadDir, `text_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.txt`);
   fs.writeFileSync(safePath, content, 'utf8');
 
   const docId = RAGService.ingestDocument(
     req.user!.id,
-    filename,
+    safeFilename,
     safePath,
     Buffer.byteLength(content),
     mimeType || 'text/plain',
@@ -73,13 +87,13 @@ ragRouter.post('/ingest-text', authMiddleware, (req: AuthenticatedRequest, res: 
     userId: req.user!.id,
     action: 'DOCUMENT_INGEST',
     resource: docId,
-    details: { filename, size: content.length }
+    details: { filename: safeFilename, size: content.length }
   });
 
   res.status(201).json({
     success: true,
     documentId: docId,
-    filename,
+    filename: safeFilename,
     message: 'Document parsed and indexed into vector knowledge base.'
   });
 });
@@ -92,19 +106,41 @@ ragRouter.post('/upload', authMiddleware, upload.single('file'), (req: Authentic
   }
 
   try {
+    // SECURITY: Sanitize original filename before storage
+    const safeFilename = path.basename(req.file.originalname).replace(/[^a-zA-Z0-9._\- ]/g, '_').slice(0, 120) || 'uploaded_document';
+
     let extractedText = '';
     const ext = path.extname(req.file.originalname).toLowerCase();
 
-    if (['.txt', '.md', '.csv', '.json', '.ts', '.js', '.py'].includes(ext)) {
+    if (ext === '.csv') {
+      const rawCsv = fs.readFileSync(req.file.path, 'utf8');
+      const lines = rawCsv.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      const headers = (lines[0] || '').split(',').map(h => h.trim().replace(/^["']|["']$/g, ''));
+      const rowCount = Math.max(0, lines.length - 1);
+      const sampleRows = lines.slice(1, 11).map(r => `| ${r.split(',').map(c => c.trim().slice(0, 30)).join(' | ')} |`);
+      const previewTable = [
+        `| ${headers.join(' | ')} |`,
+        `| ${headers.map(() => '---').join(' | ')} |`,
+        ...sampleRows
+      ].join('\n');
+
+      extractedText = [
+        `=== TABULAR DATASET INTELLIGENCE: ${safeFilename} ===`,
+        `- Total Records: ${rowCount} rows`,
+        `- Columns (${headers.length}): ${headers.join(', ')}`,
+        `- Dataset Sample Preview:\n${previewTable}`,
+        `\n=== FULL RAW DATASET ===\n${rawCsv.slice(0, 50000)}`
+      ].join('\n');
+    } else if (['.txt', '.md', '.json', '.ts', '.js', '.py'].includes(ext)) {
       extractedText = fs.readFileSync(req.file.path, 'utf8');
     } else {
       // PDF/DOCX structured representation
-      extractedText = `[Indexed Content from ${req.file.originalname}]\n\nFile Type: ${ext.toUpperCase()}\nSize: ${req.file.size} bytes\nProcessed by Prachi AI Document Intelligence Engine.\nDocument verified and accessible for grounded question answering and semantic retrieval.`;
+      extractedText = `[Indexed Content from ${safeFilename}]\n\nFile Type: ${ext.toUpperCase()}\nSize: ${req.file.size} bytes\nProcessed by Prachi AI Document Intelligence Engine.\nDocument verified and accessible for grounded question answering and semantic retrieval.`;
     }
 
     const docId = RAGService.ingestDocument(
       req.user!.id,
-      req.file.originalname,
+      safeFilename,
       req.file.path,
       req.file.size,
       req.file.mimetype,
@@ -115,13 +151,13 @@ ragRouter.post('/upload', authMiddleware, upload.single('file'), (req: Authentic
       userId: req.user!.id,
       action: 'FILE_UPLOAD',
       resource: docId,
-      details: { originalname: req.file.originalname, size: req.file.size }
+      details: { originalname: safeFilename, size: req.file.size }
     });
 
     res.status(201).json({
       success: true,
       documentId: docId,
-      filename: req.file.originalname,
+      filename: safeFilename,
       size: req.file.size,
       message: 'File uploaded, parsed, chunked, and indexed successfully.'
     });

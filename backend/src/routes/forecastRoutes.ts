@@ -61,3 +61,28 @@ forecastRouter.get('/models', authMiddleware, (req: AuthenticatedRequest, res: R
 
   res.json({ models });
 });
+
+// Detect statistical anomalies and outliers in dataset
+forecastRouter.post('/anomalies', authMiddleware, (req: AuthenticatedRequest, res: Response): void => {
+  const { values, thresholdZ } = req.body;
+  if (!Array.isArray(values) || values.length === 0) {
+    res.status(400).json({ error: 'BadRequest', message: 'Array of numeric values required' });
+    return;
+  }
+  const numericValues = values.map(Number).filter(v => !isNaN(v));
+  const result = ForecastingService.detectAnomalies(numericValues, thresholdZ ? parseFloat(thresholdZ) : 2.0);
+  res.json({ success: true, ...result });
+});
+
+// Cluster data points into k quantile/centroid segments
+forecastRouter.post('/cluster', authMiddleware, (req: AuthenticatedRequest, res: Response): void => {
+  const { values, k } = req.body;
+  if (!Array.isArray(values) || values.length === 0) {
+    res.status(400).json({ error: 'BadRequest', message: 'Array of numeric values required' });
+    return;
+  }
+  const numericValues = values.map(Number).filter(v => !isNaN(v));
+  const clusters = ForecastingService.clusterSegments(numericValues, k ? parseInt(k, 10) : 3);
+  res.json({ success: true, clusters });
+});
+

@@ -7,22 +7,42 @@ export const AdminView: React.FC = () => {
   const [metrics, setMetrics] = useState<any>(null);
   const [health, setHealth] = useState<any>(null);
   const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [telemetry, setTelemetry] = useState<any>(null);
+  const [users, setUsers] = useState<any[]>([]);
+  const [agentStats, setAgentStats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadAdminData = async () => {
     try {
-      const [mRes, hRes, lRes] = await Promise.all([
+      const [mRes, hRes, lRes, tRes, uRes, aRes] = await Promise.allSettled([
         api.getAdminMetrics(),
         api.getHealth(),
-        api.getAuditLogs(30, 0)
+        api.getAuditLogs(30, 0),
+        api.getTokenTelemetry(),
+        api.getAdminUsers(),
+        api.getAdminAgentStats()
       ]);
-      setMetrics(mRes);
-      setHealth(hRes);
-      setLogs(lRes.logs || []);
+
+      if (mRes.status === 'fulfilled') setMetrics(mRes.value);
+      if (hRes.status === 'fulfilled') setHealth(hRes.value);
+      if (lRes.status === 'fulfilled') setLogs(lRes.value.logs || []);
+      if (tRes.status === 'fulfilled') setTelemetry(tRes.value);
+      if (uRes.status === 'fulfilled') setUsers(uRes.value.users || []);
+      if (aRes.status === 'fulfilled') setAgentStats(aRes.value.stats || []);
     } catch (e) {
       console.warn('Failed to load admin metrics', e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRoleChange = async (userId: string, currentRole: string) => {
+    const nextRole = currentRole === 'admin' ? 'user' : 'admin';
+    try {
+      await api.updateUserRole(userId, nextRole);
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: nextRole } : u));
+    } catch (err) {
+      console.error('Failed to update role', err);
     }
   };
 
@@ -218,6 +238,120 @@ export const AdminView: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Module 1 & 9: Token Telemetry & Cost Accounting */}
+      {telemetry && (
+        <div className="glass-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Activity size={18} style={{ color: 'var(--accent-cyan)' }} />
+              <span>AI Token Usage Telemetry & Cost Accounting</span>
+            </h3>
+            <span className="badge badge-emerald">
+              Estimated Incurred Cost: ${telemetry.summary.totalCostUsd || '0.0000'} USD
+            </span>
+          </div>
+
+          <div className="grid-3" style={{ marginBottom: '16px' }}>
+            <div style={{ padding: '12px', borderRadius: '8px', background: 'var(--bg-glass)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Grand Total Tokens</div>
+              <div style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--accent-cyan)' }}>
+                {telemetry.summary.totalTokens?.toLocaleString() || 0}
+              </div>
+            </div>
+            <div style={{ padding: '12px', borderRadius: '8px', background: 'var(--bg-glass)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Active AI Provider</div>
+              <div style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--accent-emerald)' }}>
+                OpenAI (GPT-4o)
+              </div>
+            </div>
+            <div style={{ padding: '12px', borderRadius: '8px', background: 'var(--bg-glass)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Logged API Invocations</div>
+              <div style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--accent-amber)' }}>
+                {telemetry.recentCalls?.length || 0} calls
+              </div>
+            </div>
+          </div>
+
+          {telemetry.summary.providerBreakdown && telemetry.summary.providerBreakdown.length > 0 && (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.82rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }}>
+                    <th style={{ padding: '8px 12px' }}>Provider</th>
+                    <th style={{ padding: '8px 12px' }}>Model</th>
+                    <th style={{ padding: '8px 12px' }}>Prompt Tokens</th>
+                    <th style={{ padding: '8px 12px' }}>Completion Tokens</th>
+                    <th style={{ padding: '8px 12px' }}>Total Tokens</th>
+                    <th style={{ padding: '8px 12px' }}>Est. Cost (USD)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {telemetry.summary.providerBreakdown.map((r: any, idx: number) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <td style={{ padding: '10px 12px', fontWeight: 600, textTransform: 'uppercase' }}>{r.provider}</td>
+                      <td style={{ padding: '10px 12px', fontFamily: 'var(--font-mono)', color: 'var(--accent-indigo)' }}>{r.model}</td>
+                      <td style={{ padding: '10px 12px' }}>{r.total_prompt?.toLocaleString()}</td>
+                      <td style={{ padding: '10px 12px' }}>{r.total_completion?.toLocaleString()}</td>
+                      <td style={{ padding: '10px 12px', fontWeight: 700 }}>{r.grand_total?.toLocaleString()}</td>
+                      <td style={{ padding: '10px 12px', color: 'var(--accent-emerald)', fontWeight: 700 }}>${Math.round(r.total_cost * 10000) / 10000}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Module 9: User Directory & Role Governance */}
+      {users.length > 0 && (
+        <div className="glass-card">
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Users size={18} style={{ color: 'var(--accent-emerald)' }} />
+            <span>User Directory & Role Governance ({users.length} Users)</span>
+          </h3>
+
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.82rem' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }}>
+                  <th style={{ padding: '8px 12px' }}>Full Name</th>
+                  <th style={{ padding: '8px 12px' }}>Email / Identifier</th>
+                  <th style={{ padding: '8px 12px' }}>Role</th>
+                  <th style={{ padding: '8px 12px' }}>Created</th>
+                  <th style={{ padding: '8px 12px' }}>Role Management</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map(u => (
+                  <tr key={u.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                    <td style={{ padding: '10px 12px', fontWeight: 600 }}>{u.full_name}</td>
+                    <td style={{ padding: '10px 12px', color: 'var(--text-secondary)' }}>{u.email || u.phone}</td>
+                    <td style={{ padding: '10px 12px' }}>
+                      <span className={`badge ${u.role === 'admin' ? 'badge-rose' : 'badge-cyan'}`}>
+                        {u.role.toUpperCase()}
+                      </span>
+                    </td>
+                    <td style={{ padding: '10px 12px', color: 'var(--text-muted)' }}>
+                      {new Date(u.created_at).toLocaleDateString()}
+                    </td>
+                    <td style={{ padding: '10px 12px' }}>
+                      <button
+                        onClick={() => handleRoleChange(u.id, u.role)}
+                        className="btn-glass"
+                        style={{ padding: '4px 8px', fontSize: '0.75rem' }}
+                      >
+                        Switch to {u.role === 'admin' ? 'User' : 'Admin'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

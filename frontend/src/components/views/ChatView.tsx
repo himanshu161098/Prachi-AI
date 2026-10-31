@@ -55,7 +55,12 @@ export const ChatView: React.FC<ChatViewProps> = ({ currentModel, onNavigateToVi
   const [isRecording, setIsRecording] = useState(false);
   const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
   const [selectedLang, setSelectedLang] = useState<'hi-IN' | 'en-US' | 'ur-PK' | 'bho-IN'>('hi-IN');
-  const [showHistory, setShowHistory] = useState(true);
+  const [showHistory, setShowHistory] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth > 768;
+    }
+    return true;
+  });
   const [selectedFile, setSelectedFile] = useState<{
     name: string;
     type: string;
@@ -110,12 +115,23 @@ export const ChatView: React.FC<ChatViewProps> = ({ currentModel, onNavigateToVi
     setMessages([]);
     setInput('');
     setSelectedFile(null);
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      setShowHistory(false);
+    }
   };
 
   const handleSelectConv = (convId: string) => {
-    if (activeConvId === convId) return;
+    if (activeConvId === convId) {
+      if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+        setShowHistory(false);
+      }
+      return;
+    }
     setActiveConvId(convId);
     loadMessages(convId);
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      setShowHistory(false);
+    }
   };
 
   const handleDeleteConv = async (e: React.MouseEvent, convId: string) => {
@@ -406,6 +422,11 @@ export const ChatView: React.FC<ChatViewProps> = ({ currentModel, onNavigateToVi
 
   return (
     <div className="chat-container">
+      {/* Mobile Backdrop for Chat History Drawer */}
+      {showHistory && (
+        <div className="chat-history-backdrop" onClick={() => setShowHistory(false)} />
+      )}
+
       {/* 1. Left Sidebar: History & Recent Conversations */}
       <div className={`chat-history-sidebar ${showHistory ? 'open' : 'collapsed'}`}>
         <div className="chat-history-header">
@@ -504,7 +525,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ currentModel, onNavigateToVi
       <div className="chat-main-area">
         {/* Top Chat Bar */}
         <div className="chat-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div className="chat-header-controls">
             <button
               type="button"
               className="btn btn-secondary btn-sm"
@@ -577,7 +598,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ currentModel, onNavigateToVi
             )}
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="chat-header-stamp-wrapper">
             {/* Official Prachi AI Cognitive Core Stamp */}
             <div
               className="prachi-ai-header-stamp"

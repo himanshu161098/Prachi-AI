@@ -413,6 +413,80 @@ class ApiClient {
   async getHealth(): Promise<any> {
     return this.request('/admin/health');
   }
+
+  // Token Telemetry & Costs (Module 1 & 9)
+  async getTokenTelemetry(): Promise<any> {
+    return this.request('/admin/token-telemetry');
+  }
+
+  async getAdminUsers(): Promise<{ users: any[]; total: number }> {
+    return this.request('/admin/users');
+  }
+
+  async updateUserRole(id: string, role: 'user' | 'admin'): Promise<any> {
+    return this.request(`/admin/users/${id}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role })
+    });
+  }
+
+  async getAdminAgentStats(): Promise<{ stats: any[] }> {
+    return this.request('/admin/agent-stats');
+  }
+
+  async getAdminStorageStats(): Promise<any> {
+    return this.request('/admin/storage-stats');
+  }
+
+  // Memory Privacy Controls (Module 2)
+  async purgeAllMemories(): Promise<any> {
+    return this.request('/memory/purge-all', { method: 'POST' });
+  }
+
+  async toggleAllMemories(is_active: boolean): Promise<any> {
+    return this.request('/memory/toggle-all', {
+      method: 'POST',
+      body: JSON.stringify({ is_active })
+    });
+  }
+
+  // Specialized Autonomous Agents (Module 4)
+  async getSpecializedAgents(): Promise<{ agents: any[]; total: number }> {
+    return this.request('/agents/list');
+  }
+
+  async planAgentTask(agentType: string, taskQuery: string): Promise<{ success: boolean; plan: any }> {
+    return this.request('/agents/plan', {
+      method: 'POST',
+      body: JSON.stringify({ agentType, taskQuery })
+    });
+  }
+
+  async executeAgentPlan(planId: string, approvedStep?: number): Promise<{ success: boolean; plan: any }> {
+    return this.request(`/agents/execute/${planId}`, {
+      method: 'POST',
+      body: JSON.stringify({ approvedStep })
+    });
+  }
+
+  async getAgentExecutions(): Promise<{ executions: any[]; total: number }> {
+    return this.request('/agents/executions');
+  }
+
+  // ML Anomaly Detection & Clustering (Module 8)
+  async detectAnomalies(values: number[], thresholdZ = 2.0): Promise<any> {
+    return this.request('/forecast/anomalies', {
+      method: 'POST',
+      body: JSON.stringify({ values, thresholdZ })
+    });
+  }
+
+  async clusterSegments(values: number[], k = 3): Promise<any> {
+    return this.request('/forecast/cluster', {
+      method: 'POST',
+      body: JSON.stringify({ values, k })
+    });
+  }
 }
 
 export const api = new ApiClient();

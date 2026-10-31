@@ -179,7 +179,7 @@ export const AssistantDashboardView: React.FC<DashboardProps> = ({ onNavigate })
           </div>
 
           {/* Quick Add Form */}
-          <form onSubmit={handleAddTask} style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+          <form onSubmit={handleAddTask} style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
             <input
               type="text"
               className="input-control"

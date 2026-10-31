@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { db, hashPassword, verifyPassword } from '../database';
 import { config } from '../config';
-import { authMiddleware, AuthenticatedRequest } from '../middleware/authMiddleware';
+import { authMiddleware, AuthenticatedRequest, revokeToken } from '../middleware/authMiddleware';
 import { signToken, verifyToken } from '../utils/jwt';
 import { AuditService } from '../services/auditService';
 import { otpService, CooldownError } from '../services/otpService';
@@ -26,28 +26,26 @@ function verifyCaptcha(token?: string): { valid: boolean; message?: string } {
 
   const clean = token.trim();
 
-  // Valid token format emitted by verified widget or automated test suites
-  if (!clean.startsWith('robot-verified-') || clean === 'robot-verified-' || clean.length < 18) {
+  // Validate token format: must be robot-verified-<timestamp>-<nonce> with minimum structure
+  // NOTE: For production, replace this with server-side reCAPTCHA/Turnstile verification:
+  //   const response = await fetch('https://www.google.com/recaptcha/api/siteverify', { ... });
+  const tokenRegex = /^robot-verified-(\d{13,})-[a-zA-Z0-9]{4,}$/;
+  const match = clean.match(tokenRegex);
+  if (!match) {
     return {
       valid: false,
       message: "Human verification failed. Please check the 'I\\'m not a robot' box again."
     };
   }
 
-  // Token freshness check: if token includes timestamp (e.g. robot-verified-<timestamp>-<nonce>)
-  const parts = clean.split('-');
-  if (parts.length >= 3) {
-    const timestamp = parseInt(parts[2], 10);
-    if (!isNaN(timestamp) && timestamp > 1000000000000) {
-      const now = Date.now();
-      // Reject tokens older than 15 minutes (replay prevention) or in the future
-      if (timestamp < now - 15 * 60 * 1000 || timestamp > now + 60 * 1000) {
-        return {
-          valid: false,
-          message: "Verification token expired. Please check the 'I\\'m not a robot' box again."
-        };
-      }
-    }
+  // Token freshness check: reject tokens older than 5 minutes or in the future
+  const timestamp = parseInt(match[1], 10);
+  const now = Date.now();
+  if (timestamp < now - 5 * 60 * 1000 || timestamp > now + 30 * 1000) {
+    return {
+      valid: false,
+      message: "Verification token expired. Please check the 'I\\'m not a robot' box again."
+    };
   }
 
   return { valid: true };
@@ -155,6 +153,9 @@ authRouter.post('/send-otp', sendOtpRateLimiter, async (req: Request, res: Respo
   const isReg = purpose === 'register' || purpose === 'signup' || purpose === 'create';
   const validPurpose: 'register' | 'login' = isReg ? 'register' : 'login';
 
+  // SECURITY: Only allow devOtp in true development environments (NODE_ENV must also be non-production)
+  const isStrictDev = (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') && process.env.ALLOW_DEV_OTP === 'true';
+
   try {
     // Generate secure 6-digit OTP (enforces resend cooldown internally)
     const { otp, expiresInSeconds } = otpService.generateOTP(normalized, validPurpose);
@@ -166,12 +167,11 @@ authRouter.post('/send-otp', sendOtpRateLimiter, async (req: Request, res: Respo
       } catch (emailErr: any) {
         console.error(`[Auth] Email delivery failure for ${normalized}:`, emailErr.message || emailErr);
 
-        const isDev = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' || process.env.ALLOW_DEV_OTP === 'true';
         const isResendSandbox = emailErr.message?.includes('only send testing emails') ||
                                 emailErr.message?.includes('resend.com/domains') ||
                                 (emailErr.message?.includes('403') && emailErr.message?.toLowerCase().includes('resend'));
 
-        if (isDev && isResendSandbox) {
+        if (isStrictDev && isResendSandbox) {
           // Resend free sandbox only sends to the owner's registered email (himanshukumarsingh1610@gmail.com).
           // In development mode, allow developer to continue testing with other emails without being blocked.
           const note = ' (Resend Sandbox restriction: Free tier delivers real emails only to registered address himanshukumarsingh1610@gmail.com. Test code auto-filled below)';
@@ -209,7 +209,7 @@ authRouter.post('/send-otp', sendOtpRateLimiter, async (req: Request, res: Respo
         } catch (smsErr: any) {
           console.error(`[Auth] SMS delivery failure for ${normalized}:`, smsErr.message || smsErr);
 
-          const isDev = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' || process.env.ALLOW_DEV_OTP === 'true';
+          const isDev = isStrictDev;
 
           if (isDev) {
             // In dev mode, allow developer to continue testing even if external SMS wallet is uncharged
@@ -243,21 +243,20 @@ authRouter.post('/send-otp', sendOtpRateLimiter, async (req: Request, res: Respo
       }
     }
 
-    // Success response: do not expose internal account enumeration data
-    const isDev = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' || process.env.ALLOW_DEV_OTP === 'true';
+    // Success response: never expose internal account enumeration data
     const responsePayload: Record<string, any> = {
       success: true,
       message: isEmail
-        ? `Verification code sent to your email (${raw})`
-        : `Verification code sent to ${raw}`,
+        ? 'Verification code sent to your email.'
+        : 'Verification code sent to your phone.',
       identifier: raw,
       channel: isEmail ? 'email' : 'sms',
       purpose: validPurpose,
       expiresInSeconds
     };
 
-    // Development only: devOtp is strictly omitted in production environments
-    if (isDev) {
+    // Development only: devOtp STRICTLY requires NODE_ENV=development AND ALLOW_DEV_OTP=true
+    if (isStrictDev) {
       responsePayload.devOtp = otp;
     }
 
@@ -310,9 +309,10 @@ authRouter.post('/verify-otp', authRateLimiter, (req: Request, res: Response): v
   if (validPurpose === 'login') {
     const user = findUserByIdentifier(raw);
     if (!user) {
-      res.status(404).json({
-        error: 'UserNotFound',
-        message: 'No account found with this email or mobile number. Please register to create an account.'
+      // SECURITY: Return generic error to prevent user enumeration
+      res.status(400).json({
+        error: 'InvalidOTP',
+        message: 'Invalid or expired verification code. Please check and try again.'
       });
       return;
     }
@@ -425,10 +425,18 @@ authRouter.post('/register', authRateLimiter, (req: Request, res: Response): voi
     return;
   }
 
+  // Strong password enforcement: min 8 chars, must include uppercase, lowercase, number, and special char
   if (!password || password.length < 8) {
     res.status(400).json({
       error: 'WeakPassword',
       message: 'Password must be at least 8 characters long'
+    });
+    return;
+  }
+  if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password) || !/[!@#$%^&*()_+\-=\[\]{};':",./<>?]/.test(password)) {
+    res.status(400).json({
+      error: 'WeakPassword',
+      message: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
     });
     return;
   }
@@ -584,9 +592,10 @@ authRouter.post('/login', authRateLimiter, (req: Request, res: Response): void =
   // Branch 1: OTP Login
   if (otp && typeof otp === 'string' && otp.trim()) {
     if (!user) {
-      res.status(404).json({
-        error: 'UserNotFound',
-        message: 'No account found with this email or mobile number. Please register first to create an account.'
+      // SECURITY: Return generic error to prevent user enumeration
+      res.status(401).json({
+        error: 'InvalidCredentials',
+        message: 'Invalid credentials. Please check your details or register for a new account.'
       });
       return;
     }
@@ -615,12 +624,13 @@ authRouter.post('/login', authRateLimiter, (req: Request, res: Response): void =
       AuditService.log({
         action: 'LOGIN_FAILED',
         resource: 'auth',
-        details: { identifier: rawId, reason: 'USER_NOT_FOUND' },
+        details: { reason: 'USER_NOT_FOUND' },
         status: 'warning'
       });
+      // SECURITY: Same error message whether user exists or not — prevents enumeration
       res.status(401).json({
         error: 'InvalidCredentials',
-        message: 'No account found with this email or mobile number. Please register first or sign in using OTP.'
+        message: 'Invalid credentials. Please check your details and try again.'
       });
       return;
     }
@@ -633,9 +643,10 @@ authRouter.post('/login', authRateLimiter, (req: Request, res: Response): void =
         details: { identifier: rawId },
         status: 'warning'
       });
+      // SECURITY: Same error for wrong password as for non-existent user
       res.status(401).json({
         error: 'InvalidCredentials',
-        message: 'Invalid password. Please check your credentials or login using OTP.'
+        message: 'Invalid credentials. Please check your details and try again.'
       });
       return;
     }
@@ -695,12 +706,55 @@ authRouter.get('/me', authMiddleware, (req: AuthenticatedRequest, res: Response)
 });
 
 // -------------------------------------------------------------
-// 6. Update Preferences
+// 6. Update Preferences (Sanitized & Size Limited)
 // -------------------------------------------------------------
 authRouter.patch('/preferences', authMiddleware, (req: AuthenticatedRequest, res: Response): void => {
-  const preferences = req.body;
-  db.prepare('UPDATE users SET preferences_json = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
-    .run(JSON.stringify(preferences), req.user!.id);
+  const rawPreferences = req.body;
+  if (!rawPreferences || typeof rawPreferences !== 'object' || Array.isArray(rawPreferences)) {
+    res.status(400).json({ error: 'BadRequest', message: 'Preferences must be a valid JSON object' });
+    return;
+  }
 
-  res.json({ success: true, preferences });
+  // Prevent prototype pollution & restrict payload to safe key-values
+  const safePreferences: Record<string, any> = {};
+  const forbiddenKeys = ['__proto__', 'constructor', 'prototype'];
+  for (const [key, value] of Object.entries(rawPreferences)) {
+    if (forbiddenKeys.includes(key)) continue;
+    if (typeof key === 'string' && key.length <= 64) {
+      if (typeof value === 'string' && value.length > 2000) continue;
+      safePreferences[key] = value;
+    }
+  }
+
+  const serialized = JSON.stringify(safePreferences);
+  if (serialized.length > 16 * 1024) {
+    res.status(413).json({ error: 'PayloadTooLarge', message: 'Preferences payload exceeds 16KB limit' });
+    return;
+  }
+
+  db.prepare('UPDATE users SET preferences_json = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+    .run(serialized, req.user!.id);
+
+  res.json({ success: true, preferences: safePreferences });
 });
+
+// -------------------------------------------------------------
+// 7. Logout Endpoint (Token Revocation / Invalidation)
+// -------------------------------------------------------------
+authRouter.post('/logout', authMiddleware, (req: AuthenticatedRequest, res: Response): void => {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    revokeToken(token);
+  }
+
+  AuditService.log({
+    userId: req.user?.id,
+    action: 'USER_LOGOUT',
+    resource: 'auth',
+    details: { status: 'revoked' }
+  });
+
+  res.json({ success: true, message: 'Logged out successfully. Session invalidated.' });
+});
+

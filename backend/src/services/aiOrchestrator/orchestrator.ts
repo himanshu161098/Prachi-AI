@@ -41,10 +41,22 @@ export class AIOrchestrator {
       }
     }
 
-    // If Gemini is available, prioritize Gemini as default cloud model
+    // Preferred primary cloud provider: OpenAI
+    const openai = this.adapters.get('openai');
+    if (openai && openai.isAvailable()) {
+      return openai;
+    }
+
+    // Secondary cloud provider: Gemini
     const gemini = this.adapters.get('gemini');
     if (gemini && gemini.isAvailable()) {
       return gemini;
+    }
+
+    // Tertiary cloud provider: Claude
+    const claude = this.adapters.get('claude');
+    if (claude && claude.isAvailable()) {
+      return claude;
     }
 
     // Default fallback is always local heuristic
@@ -116,17 +128,29 @@ export class AIOrchestrator {
       chatMessages.push({ role: 'user', content: message });
     }
 
-    // 4. Retrieve User-Approved Memories (Tenant Isolated)
+    // 4. Retrieve User-Approved Memories with Semantic Relevance Matching (Module 2)
     let userMemories: string[] = [];
     if (enableMemory) {
       const memoryRows = db.prepare(`
-        SELECT content, category FROM memories
+        SELECT content, category, confidence FROM memories
         WHERE user_id = ? AND is_active = 1
-        ORDER BY confidence DESC
-        LIMIT 5
-      `).all(userId) as Array<{ content: string; category: string }>;
+      `).all(userId) as Array<{ content: string; category: string; confidence: number }>;
 
-      userMemories = memoryRows.map(m => `[${m.category.toUpperCase()}] ${m.content}`);
+      if (memoryRows.length > 0) {
+        const queryTerms = new Set(message.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 2));
+        const scored = memoryRows.map(mem => {
+          const memTerms = mem.content.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 2);
+          let matchCount = 0;
+          for (const term of memTerms) {
+            if (queryTerms.has(term)) matchCount++;
+          }
+          const score = (matchCount * 2) + (mem.confidence || 0.5);
+          return { mem, score };
+        });
+
+        scored.sort((a, b) => b.score - a.score);
+        userMemories = scored.slice(0, 6).map(s => `[${s.mem.category.toUpperCase()}] ${s.mem.content}`);
+      }
     }
 
     // 5. Retrieve RAG Document Context (Tenant Isolated)

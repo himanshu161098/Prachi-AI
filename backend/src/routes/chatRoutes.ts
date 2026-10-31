@@ -6,8 +6,8 @@ import { AIOrchestrator } from '../services/aiOrchestrator/orchestrator';
 export const chatRouter = Router();
 const orchestrator = new AIOrchestrator();
 
-// Get AI Providers status
-chatRouter.get('/providers', (req, res) => {
+// Get AI Providers status (Authenticated users only)
+chatRouter.get('/providers', authMiddleware, (req: AuthenticatedRequest, res: Response) => {
   res.json({ providers: orchestrator.getAvailableProviders() });
 });
 

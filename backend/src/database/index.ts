@@ -185,7 +185,7 @@ class EmbeddedDatabase {
 
         // Extract assignments
         const assignments = setClause.split(',').map(s => s.trim());
-        const setOperations: Array<{ col: string; isCoalesce: boolean; isCurrentTimestamp: boolean }> = [];
+        const setOperations: Array<{ col: string; isCoalesce: boolean; isCurrentTimestamp: boolean; hasParam: boolean; literalValue: any }> = [];
 
         for (const assign of assignments) {
           const parts = assign.split('=');
@@ -193,16 +193,30 @@ class EmbeddedDatabase {
           const expr = parts[1].trim();
           const isCoalesce = expr.toUpperCase().startsWith('COALESCE');
           const isCurrentTimestamp = expr.toUpperCase().includes('CURRENT_TIMESTAMP');
-          setOperations.push({ col, isCoalesce, isCurrentTimestamp });
+          const hasParam = expr.includes('?');
+          let literalValue: any = undefined;
+          if (!hasParam && !isCurrentTimestamp) {
+            if (expr.startsWith("'") && expr.endsWith("'")) {
+              literalValue = expr.slice(1, -1);
+            } else if (!isNaN(Number(expr))) {
+              literalValue = Number(expr);
+            } else {
+              literalValue = expr;
+            }
+          }
+          setOperations.push({ col, isCoalesce, isCurrentTimestamp, hasParam, literalValue });
         }
 
+        const setParamsCount = setOperations.filter(s => s.hasParam).length;
+        const whereParams = params.slice(setParamsCount);
+
         for (const [id, row] of rowMap.entries()) {
-          if (this.matchesWhere(row, whereClause, params.slice(setOperations.filter(s => !s.isCurrentTimestamp).length))) {
+          if (this.matchesWhere(row, whereClause, whereParams)) {
             let pIdx = 0;
             for (const op of setOperations) {
               if (op.isCurrentTimestamp) {
                 row[op.col] = new Date().toISOString();
-              } else {
+              } else if (op.hasParam) {
                 const val = params[pIdx++];
                 if (op.isCoalesce) {
                   if (val !== null && val !== undefined) {
@@ -211,6 +225,8 @@ class EmbeddedDatabase {
                 } else {
                   row[op.col] = val;
                 }
+              } else {
+                row[op.col] = op.literalValue;
               }
             }
             row.updated_at = new Date().toISOString();
@@ -259,9 +275,10 @@ class EmbeddedDatabase {
   }
 
   private executeAll(sql: string, upper: string, params: any[]): Array<Record<string, any>> {
-    // Count queries: SELECT count(*) as count FROM <table>
+    // Count queries without WHERE: SELECT count(*) as count FROM <table>
     const countMatch = sql.match(/SELECT\s+count\(\*\)\s+as\s+([a-zA-Z0-9_]+)\s+FROM\s+([a-zA-Z0-9_]+)/i);
-    if (countMatch) {
+    const hasWhere = sql.toUpperCase().includes('WHERE');
+    if (countMatch && !hasWhere) {
       const colName = countMatch[1];
       const table = countMatch[2].toLowerCase();
       const rowMap = this.tables.get(table);
@@ -297,6 +314,41 @@ class EmbeddedDatabase {
 
     if (whereClause) {
       results = results.filter(row => this.matchesWhere(row, whereClause, params));
+    }
+
+    if (countMatch && hasWhere) {
+      return [{ [countMatch[1]]: results.length }];
+    }
+
+    // Group By aggregation support
+    const groupMatch = sql.match(/GROUP\s+BY\s+([a-zA-Z0-9_,\s]+)/i);
+    if (groupMatch) {
+      const groupCols = groupMatch[1].split(',').map(s => s.trim().toLowerCase());
+      const groups = new Map<string, any[]>();
+      for (const r of results) {
+        const key = groupCols.map(c => String(r[c] ?? '')).join(':::');
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key)!.push(r);
+      }
+
+      const groupedResults: any[] = [];
+      for (const rows of groups.values()) {
+        const first = rows[0];
+        const resObj: any = {};
+        for (const c of groupCols) {
+          resObj[c] = first[c];
+        }
+        resObj.total_prompt = rows.reduce((s, x) => s + (Number(x.prompt_tokens) || 0), 0);
+        resObj.total_completion = rows.reduce((s, x) => s + (Number(x.completion_tokens) || 0), 0);
+        resObj.grand_total = rows.reduce((s, x) => s + (Number(x.total_tokens) || 0), 0);
+        resObj.total_cost = rows.reduce((s, x) => s + (Number(x.estimated_cost_usd) || 0), 0);
+        resObj.count = rows.length;
+        resObj.call_count = rows.length;
+        if (first.status !== undefined) resObj.status = first.status;
+        if (first.type !== undefined) resObj.type = first.type;
+        groupedResults.push(resObj);
+      }
+      return groupedResults;
     }
 
     // Order By
@@ -411,6 +463,13 @@ class EmbeddedDatabase {
         continue;
       }
 
+      // col IS NULL
+      if (trimmed.toUpperCase().includes('IS NULL') && !trimmed.toUpperCase().includes('IS NOT NULL')) {
+        const col = trimmed.split(/\s+/)[0].replace(/^[a-zA-Z0-9_]+\./, '').toLowerCase();
+        if (row[col] !== null && row[col] !== undefined) return false;
+        continue;
+      }
+
       // col IS NOT NULL
       if (trimmed.toUpperCase().includes('IS NOT NULL')) {
         const col = trimmed.split(/\s+/)[0].replace(/^[a-zA-Z0-9_]+\./, '').toLowerCase();
@@ -442,6 +501,8 @@ export function initDatabase() {
     CREATE TABLE IF NOT EXISTS audit_logs;
     CREATE TABLE IF NOT EXISTS feature_flags;
     CREATE TABLE IF NOT EXISTS contacts;
+    CREATE TABLE IF NOT EXISTS token_usage_logs;
+    CREATE TABLE IF NOT EXISTS agent_executions;
   `);
 
   seedInitialData();
@@ -473,30 +534,43 @@ function seedInitialData() {
 
   const userExists = db.prepare('SELECT id FROM users WHERE id = ?').get(demoUserId);
   if (!userExists) {
-    const demoPasswordHash = hashPassword(process.env.DEMO_INITIAL_PASSWORD || 'PrachiAI2026!');
-    const adminPass = process.env.ADMIN_INITIAL_PASSWORD || (process.env.NODE_ENV === 'production' ? crypto.randomBytes(16).toString('hex') : 'AdminPass2026!');
-    const adminPasswordHash = hashPassword(adminPass);
-    if (process.env.NODE_ENV === 'production' && !process.env.ADMIN_INITIAL_PASSWORD) {
-      console.log(`[Security] Generated secure random initial admin password: ${adminPass}`);
+    // SECURITY: In production, do not create predictable demo accounts unless explicitly opted-in
+    const enableDemo = process.env.NODE_ENV !== 'production' || process.env.ENABLE_DEMO_ACCOUNT === 'true';
+    if (enableDemo) {
+      const demoPasswordHash = hashPassword(process.env.DEMO_INITIAL_PASSWORD || 'PrachiAI2026!');
+      db.prepare(`
+        INSERT INTO users (id, email, phone, password_hash, full_name, role, preferences_json)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        demoUserId,
+        'demo@prachi.ai',
+        '9876543210',
+        demoPasswordHash,
+        'Pari Verma',
+        'user',
+        JSON.stringify({
+          theme: 'dark',
+          ai_tone: 'helpful_concise',
+          auto_speak: false,
+          memory_enabled: true
+        })
+      );
     }
 
-    db.prepare(`
-      INSERT INTO users (id, email, phone, password_hash, full_name, role, preferences_json)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      demoUserId,
-      'demo@prachi.ai',
-      '9876543210',
-      demoPasswordHash,
-      'Pari Verma',
-      'user',
-      JSON.stringify({
-        theme: 'dark',
-        ai_tone: 'helpful_concise',
-        auto_speak: false,
-        memory_enabled: true
-      })
+    // Admin account setup — never log raw password to stdout
+    const adminPass = process.env.ADMIN_INITIAL_PASSWORD || (
+      process.env.NODE_ENV === 'production'
+        ? crypto.randomBytes(24).toString('hex')
+        : 'AdminPass2026!'
     );
+    const adminPasswordHash = hashPassword(adminPass);
+    if (process.env.NODE_ENV === 'production') {
+      if (process.env.ADMIN_INITIAL_PASSWORD) {
+        console.log('[Security] Admin account seeded using ADMIN_INITIAL_PASSWORD from environment.');
+      } else {
+        console.log('[Security] Initial admin account provisioned. Set ADMIN_INITIAL_PASSWORD in .env to specify custom credentials.');
+      }
+    }
 
     db.prepare(`
       INSERT INTO users (id, email, phone, password_hash, full_name, role, preferences_json)

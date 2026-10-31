@@ -108,10 +108,70 @@ export const MemoryView: React.FC = () => {
           </div>
         </div>
 
-        <button className="btn btn-primary" onClick={() => setIsAddModalOpen(true)}>
-          <Plus size={16} />
-          <span>Add Memory</span>
-        </button>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <button
+            className="btn btn-secondary"
+            title="Download all your private memories as JSON"
+            onClick={async () => {
+              try {
+                const token = localStorage.getItem('prachi_auth_token');
+                const res = await fetch('/api/memory/export/download', {
+                  headers: token ? { Authorization: `Bearer ${token}` } : {}
+                });
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `prachi_ai_memories_${Date.now()}.json`;
+                a.click();
+              } catch (e) {
+                console.error(e);
+              }
+            }}
+          >
+            <span>Export JSON</span>
+          </button>
+
+          <button
+            className="btn btn-secondary"
+            title="Toggle active status of all memories"
+            onClick={async () => {
+              const allActive = memories.every(m => m.is_active === 1);
+              try {
+                await api.toggleAllMemories(!allActive);
+                setMemories(prev => prev.map(m => ({ ...m, is_active: allActive ? 0 : 1 })));
+              } catch (e) {
+                console.error(e);
+              }
+            }}
+          >
+            <span>{memories.every(m => m.is_active === 1) ? 'Disable All' : 'Enable All'}</span>
+          </button>
+
+          <button
+            className="btn btn-secondary"
+            style={{ color: 'var(--accent-rose)', borderColor: 'rgba(244, 63, 94, 0.3)' }}
+            title="Permanently wipe all memories"
+            onClick={async () => {
+              if (window.confirm('Are you sure you want to PERMANENTLY ERASE all personal memories? This cannot be undone.')) {
+                try {
+                  await api.purgeAllMemories();
+                  setMemories([]);
+                } catch (e) {
+                  console.error(e);
+                }
+              }
+            }}
+          >
+            <Trash2 size={15} />
+            <span>Wipe All</span>
+          </button>
+
+          <button className="btn btn-primary" onClick={() => setIsAddModalOpen(true)}>
+            <Plus size={16} />
+            <span>Add Memory</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter and Search Bar */}
