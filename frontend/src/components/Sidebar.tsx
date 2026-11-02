@@ -15,7 +15,8 @@ import {
   X,
   Database,
   Cpu,
-  ArrowLeft
+  ArrowLeft,
+  Bot
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -26,6 +27,7 @@ export type NavView =
   | 'rag'
   | 'vision'
   | 'forecasting'
+  | 'agents'
   | 'tools'
   | 'research'
   | 'artifacts'
@@ -70,6 +72,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'rag', label: 'Knowledge Base (RAG)', icon: <FileText size={18} /> },
     { id: 'vision', label: 'Multimodal Vision', icon: <Eye size={18} /> },
     { id: 'forecasting', label: 'ML Forecasting', icon: <TrendingUp size={18} /> },
+    { id: 'agents', label: 'Autonomous Agents', icon: <Bot size={18} />, badge: '8 Agents' },
     { id: 'tools', label: 'Tool Sandbox & Policy', icon: <Wrench size={18} /> },
     { id: 'research', label: 'Research Studio', icon: <Search size={18} /> },
     { id: 'artifacts', label: 'Workspace Artifacts', icon: <FileCode size={18} /> },

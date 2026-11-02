@@ -59,8 +59,10 @@ const MainLayout: React.FC = () => {
         return <VisionView />;
       case 'forecasting':
         return <ForecastingView />;
+      case 'agents':
+        return <ToolsView initialTab="agents" />;
       case 'tools':
-        return <ToolsView />;
+        return <ToolsView initialTab="direct_tools" />;
       case 'research':
         return <ResearchView />;
       case 'artifacts':

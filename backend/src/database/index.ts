@@ -533,6 +533,10 @@ function seedInitialData() {
   const adminUserId = 'usr-admin-001';
 
   const userExists = db.prepare('SELECT id FROM users WHERE id = ?').get(demoUserId);
+  if (userExists && process.env.ADMIN_INITIAL_PASSWORD) {
+    const adminPasswordHash = hashPassword(process.env.ADMIN_INITIAL_PASSWORD);
+    db.prepare(`UPDATE users SET password_hash = ? WHERE id = ?`).run(adminPasswordHash, adminUserId);
+  }
   if (!userExists) {
     // SECURITY: In production, do not create predictable demo accounts unless explicitly opted-in
     const enableDemo = process.env.NODE_ENV !== 'production' || process.env.ENABLE_DEMO_ACCOUNT === 'true';

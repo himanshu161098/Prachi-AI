@@ -8879,6 +8879,7 @@
       { id: "rag", label: "Knowledge Base (RAG)", icon: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(FileText, { size: 18 }) },
       { id: "vision", label: "Multimodal Vision", icon: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(Eye, { size: 18 }) },
       { id: "forecasting", label: "ML Forecasting", icon: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(TrendingUp, { size: 18 }) },
+      { id: "agents", label: "Autonomous Agents", icon: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(Bot, { size: 18 }), badge: "8 Agents" },
       { id: "tools", label: "Tool Sandbox & Policy", icon: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(Wrench, { size: 18 }) },
       { id: "research", label: "Research Studio", icon: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(Search, { size: 18 }) },
       { id: "artifacts", label: "Workspace Artifacts", icon: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(FileCode, { size: 18 }) },
@@ -12687,8 +12688,13 @@
       /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("path", { d: "M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" })
     ] });
   }
-  var ToolsView = () => {
-    const [activeTab, setActiveTab] = (0, import_react13.useState)("agents");
+  var ToolsView = ({ initialTab = "agents" }) => {
+    const [activeTab, setActiveTab] = (0, import_react13.useState)(initialTab);
+    (0, import_react13.useEffect)(() => {
+      if (initialTab) {
+        setActiveTab(initialTab);
+      }
+    }, [initialTab]);
     const [agents, setAgents] = (0, import_react13.useState)([]);
     const [selectedAgent, setSelectedAgent] = (0, import_react13.useState)("research_agent");
     const [taskQuery, setTaskQuery] = (0, import_react13.useState)(AGENT_PRESETS["research_agent"].query);
@@ -14563,7 +14569,19 @@
       ]
     },
     {
-      title: "5. Tool Registry & Confirmation Gates",
+      title: "5. Autonomous Multi-Step Agents",
+      icon: Bot,
+      color: "var(--accent-indigo)",
+      view: "agents",
+      description: "Deploy 8 specialized autonomous agents capable of decomposing complex goals into structured multi-step execution plans.",
+      bulletPoints: [
+        "8 Specialized Agents: Coder, Researcher, Document Synthesizer, Data Intelligence, Study Assistant, Personal Productivity, Web Intelligence, and Project Delivery.",
+        "Autonomous task planning decomposes any prompt into sequential steps with tool assignments.",
+        "Step-by-step human-in-the-loop review and execution with live status and token tracking."
+      ]
+    },
+    {
+      title: "6. Tool Registry & Confirmation Gates",
       icon: Wrench,
       color: "var(--accent-amber)",
       view: "tools",
@@ -14575,7 +14593,7 @@
       ]
     },
     {
-      title: "6. Voice Assistant Studio",
+      title: "7. Voice Assistant Studio",
       icon: Mic,
       color: "var(--accent-cyan)",
       view: "chat",
@@ -14587,7 +14605,7 @@
       ]
     },
     {
-      title: "7. Admin Console & Live API Keys",
+      title: "8. Admin Console & Live API Keys",
       icon: Shield,
       color: "var(--accent-rose)",
       view: "admin",
@@ -14728,8 +14746,10 @@
           return /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(VisionView, {});
         case "forecasting":
           return /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(ForecastingView, {});
+        case "agents":
+          return /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(ToolsView, { initialTab: "agents" });
         case "tools":
-          return /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(ToolsView, {});
+          return /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(ToolsView, { initialTab: "direct_tools" });
         case "research":
           return /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(ResearchView, {});
         case "artifacts":

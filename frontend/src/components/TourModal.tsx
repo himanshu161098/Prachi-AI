@@ -11,7 +11,8 @@ import {
   Shield,
   ArrowRight,
   ArrowLeft,
-  CheckCircle2
+  CheckCircle2,
+  Bot
 } from 'lucide-react';
 
 interface TourModalProps {
@@ -70,7 +71,19 @@ const TOUR_STEPS = [
     ]
   },
   {
-    title: '5. Tool Registry & Confirmation Gates',
+    title: '5. Autonomous Multi-Step Agents',
+    icon: Bot,
+    color: 'var(--accent-indigo)',
+    view: 'agents',
+    description: 'Deploy 8 specialized autonomous agents capable of decomposing complex goals into structured multi-step execution plans.',
+    bulletPoints: [
+      '8 Specialized Agents: Coder, Researcher, Document Synthesizer, Data Intelligence, Study Assistant, Personal Productivity, Web Intelligence, and Project Delivery.',
+      'Autonomous task planning decomposes any prompt into sequential steps with tool assignments.',
+      'Step-by-step human-in-the-loop review and execution with live status and token tracking.'
+    ]
+  },
+  {
+    title: '6. Tool Registry & Confirmation Gates',
     icon: Wrench,
     color: 'var(--accent-amber)',
     view: 'tools',
@@ -82,7 +95,7 @@ const TOUR_STEPS = [
     ]
   },
   {
-    title: '6. Voice Assistant Studio',
+    title: '7. Voice Assistant Studio',
     icon: Mic,
     color: 'var(--accent-cyan)',
     view: 'chat',
@@ -94,7 +107,7 @@ const TOUR_STEPS = [
     ]
   },
   {
-    title: '7. Admin Console & Live API Keys',
+    title: '8. Admin Console & Live API Keys',
     icon: Shield,
     color: 'var(--accent-rose)',
     view: 'admin',

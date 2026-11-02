@@ -88,8 +88,18 @@ function GlobeIcon(props: any) {
   );
 }
 
-export const ToolsView: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'agents' | 'direct_tools'>('agents');
+interface ToolsViewProps {
+  initialTab?: 'agents' | 'direct_tools';
+}
+
+export const ToolsView: React.FC<ToolsViewProps> = ({ initialTab = 'agents' }) => {
+  const [activeTab, setActiveTab] = useState<'agents' | 'direct_tools'>(initialTab);
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   // Agent State
   const [agents, setAgents] = useState<any[]>([]);
